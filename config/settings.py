@@ -2,6 +2,9 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+db_password=os.getenv("MY_DB_PASSWORD")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -70,7 +73,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'digital_zoo',
         'USER': 'postgres',
-        'PASSWORD': 'G=nf_-}EKl',
+        'PASSWORD': db_password,
         'HOST': 'hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }
@@ -123,6 +126,3 @@ AUTH_USER_MODEL = 'customer.MyUser'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-load_dotenv()
-db_password=os.getenv("MY_DB_PASSWORD")
