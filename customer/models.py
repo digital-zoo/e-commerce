@@ -1,23 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
-class MyModel(AbstractBaseUser):
-    username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(max_length=255, unique=True)
-    phone_number = models.CharField(max_length=255, unique=True)
-    is_staff = models.BooleanField(default=False)  # 관리자 사이트 접근 권한
-
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email'] #superusercreate할 때 email 필요
-
-    def __str__(self):
-        return self.username
-
-class Membership(models.Model):
-    membership_id = models.IntegerField(primary_key=True)
-    grade = models.CharField(max_length=255, unique=True)
-
-class CustomerManager(BaseUserManager):
+class MyUserManager(BaseUserManager):
     def create_user(self, username, email, password=None):
         """
         일반 사용자 생성
@@ -49,12 +33,28 @@ class CustomerManager(BaseUserManager):
         user.is_superuser = True
         user.save(using=self._db)
         return user
+
+class MyUser(AbstractBaseUser):
+    username = models.CharField(max_length=50, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
+    phone_number = models.CharField(max_length=255, unique=True)
+    is_staff = models.BooleanField(default=False)  # 관리자 사이트 접근 권한
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email'] #superusercreate할 때 email 필요
+
+    objects = MyUserManager()
+
+    def __str__(self):
+        return self.username
+
+class Membership(models.Model):
+    membership_id = models.IntegerField(primary_key=True)
+    grade = models.CharField(max_length=255, unique=True)
     
-class Customer(MyModel):    
+class Customer(MyUser):    
     membership = models.ForeignKey(Membership, on_delete=models.DO_NOTHING)    
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
     is_snsid = models.BooleanField()
-
-    objects = CustomerManager()
