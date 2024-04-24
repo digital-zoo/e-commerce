@@ -9,6 +9,7 @@ class Seller(MyUser):
     registration_number = models.CharField(max_length=255,unique=True)
 
 class Category(models.Model):
+    category_id = models.AutoField(primary_key=True)
     category_name = models.CharField(max_length=100)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
 
@@ -28,6 +29,7 @@ class Product(models.Model):
     is_option = models.BooleanField(default=True)
 
 class ProductImage(models.Model):
+    productimage_id = models.AutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image_url=models.URLField()
  

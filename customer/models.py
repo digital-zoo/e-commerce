@@ -111,6 +111,7 @@ class OrderItem(models.Model):
         return str(self.orderitem_id)
 
 class Like(models.Model):
+    like_id = models.AutoField(primary_key=True)
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
