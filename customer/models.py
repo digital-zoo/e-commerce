@@ -1,6 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+# 멤버쉽 테이블
+class Membership(models.Model):
+    membership_id = models.IntegerField(primary_key=True)
+    grade = models.CharField(max_length=255,unique=True)
+
+###############
+# 유저 테이블 커스터 마이징을 위한 3단계
+# 1단계, user manager 정의
 class MyUserManager(BaseUserManager):
     def create_user(self, username, email, password=None):
         """
@@ -34,7 +42,7 @@ class MyUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
-
+# 2단계, 상위 유저 생성   
 class MyUser(AbstractBaseUser,PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=255, unique=True)
@@ -58,14 +66,57 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
 
     def __str__(self):
         return self.username
-
-class Membership(models.Model):
-    membership_id = models.IntegerField(primary_key=True)
-    grade = models.CharField(max_length=255, unique=True)
     
+
+# 3단계, customer 클래스 생성    
 class Customer(MyUser):    
     membership = models.ForeignKey(Membership, on_delete=models.DO_NOTHING)    
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
     is_snsid = models.BooleanField()
+
+# 카트 테이블
+class Cart(models.Model):
+    cart_id = models.AutoField(primary_key=True)  # 카트ID는 자동으로 생성되는 순차적인 정수
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)  # Customer 테이블과 외래키 관계, 
+
+class CartItem(models.Model):
+    cartitem_id = models.AutoField(primary_key=True)  # 카트아이템ID는 자동으로 생성되는 순차적인 정수
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)  # 카트와의 외래키 관계, 카트가 삭제되면 관련된 카트아이템도 삭제
+    product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)  # product와 외래키 관계, 
+    quantity = models.IntegerField()  # 수량은 정수형
+
+class Order(models.Model):
+    order_id = models.AutoField(primary_key=True) 
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    order_date = models.DateField()
+    order_status = models.CharField(max_length=50)
+    shipping_address = models.CharField(max_length=300)
+    postal_code = models.CharField(max_length=5)
+    recipient = models.CharField(max_length=100)
+    recipient_phone_number = models.CharField(max_length=20)
+    payment_method = models.CharField(max_length=20)
+
+    def __str__(self):
+        return str(self.order_id)
+
+class OrderItem(models.Model):
+    orderitem_id = models.AutoField(primary_key=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
+    quantity = models.IntegerField() 
+
+    def __str__(self):
+        return str(self.orderitem_id)
+
+class Like(models.Model):
+    product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} liked {self.product.name}"
+    
+    class Meta:
+        ordering = ['-created_at']
