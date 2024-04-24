@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 class MyUserManager(BaseUserManager):
     def create_user(self, username, email, password=None):
@@ -33,8 +33,9 @@ class MyUserManager(BaseUserManager):
         user.is_superuser = True
         user.save(using=self._db)
         return user
+    
 
-class MyUser(AbstractBaseUser):
+class MyUser(AbstractBaseUser,PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     phone_number = models.CharField(max_length=255, unique=True)
@@ -44,6 +45,16 @@ class MyUser(AbstractBaseUser):
     REQUIRED_FIELDS = ['email'] #superusercreate할 때 email 필요
 
     objects = MyUserManager()
+
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # 슈퍼유저에게는 모든 권한을 부여
+        return self.is_superuser
+
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # 슈퍼유저 또는 모든 앱에 대해 True를 반환
+        return self.is_superuser
 
     def __str__(self):
         return self.username
