@@ -1,16 +1,15 @@
 from django.db import models
+from customer.models import MyUser
+# from django.contrib.auth.models import BaseUserManager
 
-# Create your models here.
-class Seller(models.Model):
-    seller_id = models.CharField(primary_key=True,max_length=255) 
-    password = models.CharField(max_length=255)
-    email = models.EmailField()
-    company_name = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=255)
+# Myuser 상속받아서 seller 테이블 생성    
+class Seller(MyUser):    
+    company_name = models.CharField(max_length=255)    
     business_contact = models.CharField(max_length=255,unique=True,null=True)
     registration_number = models.CharField(max_length=255,unique=True)
 
 class Category(models.Model):
+    category_id = models.AutoField(primary_key=True)
     category_name = models.CharField(max_length=100)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
 
@@ -18,6 +17,7 @@ class Category(models.Model):
         return self.name
 
 class Product(models.Model):
+    product_id = models.AutoField(primary_key=True)
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
     product_name = models.CharField(max_length=255)
@@ -29,6 +29,7 @@ class Product(models.Model):
     is_option = models.BooleanField(default=True)
 
 class ProductImage(models.Model):
+    productimage_id = models.AutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image_url=models.URLField()
  
