@@ -1,0 +1,28 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex flex-wrap mt-4 "> 
+  <a href="#" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+  <a href="#" class="link-body-emphasis text-decoration-none mx-2">최신순</a>
+  <a href="#" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+</div>
+<div class="album py-5 ">
+    <div class="container">
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        {% for product in products %}
+        {% endfor %}
+
+        <div class="col">
+          <div class="card" >
+            <img src="..." class="card-img-top" >
+            <div class="card-body">
+              <h5 class="card-title">product.product_name</h5>
+              <p class="card-text">product.price</p>
+              <a href="#" class="btn btn-primary">자세히 보기</a>
+            </div>
+          </div>
+        </div>
+      
+      </div>
+    </div>
+</div>
+{% endblock %}
