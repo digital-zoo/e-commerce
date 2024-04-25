@@ -34,4 +34,4 @@ class ProductImage(models.Model):
     image_url=models.URLField()
  
     def __str__(self):
-        return f"Image for {self.product.name} at {self.image_url}"
+        return f"Image for {self.product.product_name} at {self.image_url}"
