@@ -25,7 +25,7 @@ class Product(models.Model):
     description = models.TextField()
     is_visible = models.BooleanField(default=True)
     stock = models.IntegerField()
-    discount_rate = models.DecimalField(max_digits=2, decimal_places=2)
+    discount_rate = models.DecimalField(max_digits=3, decimal_places=2)
     is_option = models.BooleanField(default=True)
 
 class ProductImage(models.Model):

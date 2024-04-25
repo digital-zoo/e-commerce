@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 class Membership(models.Model):
     membership_id = models.IntegerField(primary_key=True)
     grade = models.CharField(max_length=255,unique=True)
+    member_discount_rate = models.DecimalField(max_digits=3, decimal_places=2)    
+
 
 ###############
 # 유저 테이블 커스터 마이징을 위한 3단계
@@ -75,6 +77,7 @@ class Customer(MyUser):
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
     is_snsid = models.BooleanField()
+    is_advertise = models.BooleanField() # 광고 동의 여부
 
 # 카트 테이블
 class Cart(models.Model):
