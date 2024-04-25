@@ -8,6 +8,7 @@
 <body>
   {% block extra-style %}{% endblock %}  
 
+  <!-- 최상단 nav바 -->
   <nav class="py-2 border-bottom">
     <div class="container d-flex flex-wrap">
       <ul class="nav me-auto">
@@ -29,7 +30,7 @@
     </div>
   </nav>
 
-  
+  <!-- 로고+검색+부가서비스로 구성 -->
   <header class="py-2 border-bottom bg-body-tertiary">
     <div class="container d-flex flex-wrap justify-content-between align-items-center">
         <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none "> 
@@ -47,17 +48,25 @@
             <a href="#" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
         </div>
     </div>
-    <div class="container d-flex flex-wrap justify-content-center mt-4">
-        {% for category in categories %}
-        <p class="mx-2">{{category}}</p>
-        {% endfor %}
+
+    <!-- 카테고리 -->
+    <div class="container d-flex flex-wrap justify-content-center my-3">
+      {% for category in categories %}
+        {% if current_category == category %}
+        <a href="{% url 'customer:category_list' category.category_id %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">{{category}}</a> 
+        {% else %}
+        <a href="{% url 'customer:category_list' category.category_id %}" class="link-body-emphasis text-decoration-none mx-2">{{category}}</a> 
+        {% endif %}  
+      {% endfor %}
     </div>
   </header>
+
 
   <div class="container">
     {% block content %}{% endblock %}
   </div>
 
+  <!-- footer -->
   <div class="container mt-5">
     <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
       <p class="col-md-4 mb-0 text-body-secondary">&copy; 2024 Company, Inc</p>
