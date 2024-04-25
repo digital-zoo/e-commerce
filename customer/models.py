@@ -117,10 +117,21 @@ class Like(models.Model):
     like_id = models.AutoField(primary_key=True)
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} liked {self.product.name}"
+    created_at = models.DateTimeField(auto_now_add=True)    
     
     class Meta:
         ordering = ['-created_at']
+
+class ShippingAddress(models.Model):
+    shipping_address_name = models.CharField(max_length=20)
+    shipping_address = models.CharField(max_length=300)
+    postal_code = models.CharField(max_length=5)
+    recipient = models.CharField(max_length=100)
+    recipient_phone_number = models.CharField(max_length=20)
+
+class Review(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
+    content = models.TextField()
+    rating = models.IntegerField(default=5)
+    created_at = models.DateTimeField(auto_now_add=True)    
