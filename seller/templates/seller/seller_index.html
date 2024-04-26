@@ -3,3 +3,31 @@
 <div class="d-flex justify-content-end mb-3">
     <a href="{% url 'seller:add_product' %}" class="btn btn-primary">제품 등록</a>
 </div>
+
+
+
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>판매자 생성</title>
+</head>
+<body>
+  <h1>판매자 생성</h1>
+  <form method="post">
+    {% csrf_token %}
+    <label for="username">사용자 이름:</label>
+    <input type="text" id="username" name="username" required>
+
+    <label for="email">이메일:</label>
+    <input type="email" id="email" name="email" required>
+
+    <label for="phone_number">전화번호:</label>
+    <input type="tel" id="phone_number" name="phone_number" required>
+
+    <label for="company_name">회사 이름:</label>
+    <input type="text" id="company_name" name="company_name" required>
+
+    <button type="submit">생성</button>
+  </form>
+</body>
+</html>

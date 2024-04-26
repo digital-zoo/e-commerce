@@ -5,7 +5,26 @@
 
 <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
-    <div>       
+    <div>      
+        <div>
+            <label for="seller" class="form-label">seller:</label>
+            <select name="seller" id="seller" required>
+                <option value="">--- 카테고리 선택 ---</option>
+                {% for seller in sellers %}                  
+                  <option value="{{ seller.id }}">{{ seller.username }}</option>
+                  
+                {% endfor %}
+              </select>            
+        </div> 
+        <div>
+            <label for="category" class="form-label">카테고리:</label>
+            <select name="category" id="category" required>
+                <option value="">--- 카테고리 선택 ---</option>
+                {% for category in categories %}
+                  <option value="{{ category.category_id }}">{{ category.category_name }}</option>
+                {% endfor %}
+              </select>            
+        </div> 
         <div>
             <label for="product_name" class="form-label">상품 이름:</label>
             <input type="text" name="product_name" class="form-control" id="product_name">
@@ -20,8 +39,8 @@
         <textarea name="description" rows="2" class="form-control"></textarea>
     </div>
     <div>
-        <label for="is_option" class="form-label">노출:</label>
-        <select name="visible" class="form-control" id="visible">
+        <label for="is_visible" class="form-label">노출:</label>
+        <select name="is_visible" class="form-control" id="is_visible">
             <option value="true">노출</option>
             <option value="false">비노출</option>
         </select>
