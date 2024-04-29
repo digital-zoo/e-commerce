@@ -1,79 +1,42 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<div class="album py-5 ">
-    <div class="container">
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
-        {% for product in products %}
-        <div class="col">
-          <div class="card" >
-            <img src="{% static 'example/소고기스테이크.png' %}" class="card-img-top" >
-            <div class="card-body">
-              <h5 class="card-title">{{product.product_name}}</h5>
-              <p class="card-text">{{product.price}}원</p>
-              <a href="#" class="btn btn-primary">자세히 보기</a>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-</div>
-
 <div class="container mt-5">
     <div class="row">
     <div class="col-md-6">
         <img src="{{ object.image_url }}" alt="{{ object.name }}" class="product-image">
+        <img src="{% static 'example/소고기스테이크.png' %}" alt="{{ object.name }}" class="product-image">
     </div>
     <div class="col-md-6 info-section">
         <p>상품 카테고리 : {{ object.category_name }}</p>
         <h2>{{ object.product_name }}</h2>
         <h3 class="text-muted">{{ object.price }}원</h3>
-        <p>할인율 : {{ object.discount_rate }}개</p>
+        <p>할인율 : {{ object.discount_rate }}</p>
         <p>할인 적용가 -> 나중에 계산할 것</p>
         <p>현재 재고 : {{ object.stock }}개</p>
         <p>{{ object.description }}</p>
+        <div  class="col-md-6 container">
+            <input type="hidden" id="csrfToken" value="{{csrf_token}}">
+            <button type="button" onclick="modifyAmount({{object.id}}, -1)" class="btn btn-primary">-</button>
+            <button type="button" class="btn btn-secondary">
+                <span class="badge bg-secondary"><span id="currentQuantity"></span></span>
+            </button>
+            <button type="button" onclick="modifyAmount({{object.id}}, 1)" class="btn btn-danger">+</button>
+            </div>
+            <div  class="container">
+                <input type="hidden" id="csrfToken" value="{{csrf_token}}">
+                <a href="#" class="btn btn-primary">장바구니 담기</a>
+                <a href="#" class="btn btn-success">바로구매</a>
+                </button>
+            </div>
     </div>
     </div>
     </div>
-    <div  class="container">
-    <input type="hidden" id="csrfToken" value="{{csrf_token}}">
-    <button type="button" onclick="modifyCartAmount({{object.id}}, 1)" class="btn btn-danger">담기</button>
-    <button type="button" onclick="modifyCartAmount({{object.id}}, -1)" class="btn btn-success">빼기</button>
-    <button type="button" class="btn btn-primary">
-    선택수량 <span class="badge bg-secondary"><span id="currentQuantity"></span></span>
-    </button>
-    </div>
-    
     <!-- Bootstrap JS with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-<script>
+<!-- <script>
 document.getElementById('totalQuantity').textContent = {{totalCartAmount}}
 document.getElementById('currentQuantity').textContent = {{cartAmount}}
-function getCsrfToken(){
-return document.getElementById('csrfToken').value;
-}
-function modifyCartAmount(food_id, change){
-var xhr = new XMLHttpRequest();
-    xhr.open('POST', '{% url "order:modify_cart" %}?include_prices=false', true); // 확인 : 이전 -> customer:modify_cart
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.setRequestHeader('X-CSRFToken', getCsrfToken());
-
-    xhr.onload = function() {
-        if (this.status === 200) {
-            var response = JSON.parse(this.responseText);
-            document.getElementById('currentQuantity').textContent = response.newQuantity;
-            
-            document.getElementById('totalQuantity').textContent = response.totalQuantity;// 추가
-            
-            console.log('Update successful:', response.message);
-        } else {
-            console.error('Error updating:', this.statusText);
-        }
-    };
-
-    xhr.send(`foodId=${food_id}&amountChange=${change}`);
-}
-</script>
+</script> -->
 {% endblock %}
