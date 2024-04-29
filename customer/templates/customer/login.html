@@ -1,0 +1,18 @@
+<br>
+{%if user.is_authenticated %}
+    로그인 성공
+    {{user.username}}님 환영합니다.
+    <a href="{% url 'customer:logout' %}">로그아웃</a>
+{%else%}
+
+<form action="" method="post">
+    {% csrf_token %}
+    <label for="username">사용자 이름:</label>
+    <input type="text" name="username" id="username" required><br>
+    <label for="password">비밀번호:</label>
+    <input type="password" name="password" id="password" required><br>
+    <button type="submit">로그인</button>    
+</form>
+<a href="{% url 'customer:signup' %}">회원가입</a>
+
+{% endif %}

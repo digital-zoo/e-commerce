@@ -52,7 +52,7 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
     is_staff = models.BooleanField(default=False)  # 관리자 사이트 접근 권한
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email'] #superusercreate할 때 email 필요
+    REQUIRED_FIELDS = ['email','phone_number'] #superusercreate할 때 email,phone_number 필요
 
     objects = MyUserManager()
 
@@ -71,13 +71,13 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
     
 
 # 3단계, customer 클래스 생성    
-class Customer(MyUser):    
+class Customer(MyUser):        
     membership = models.ForeignKey(Membership, on_delete=models.DO_NOTHING)    
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
-    is_snsid = models.BooleanField()
-    is_advertise = models.BooleanField() # 광고 동의 여부
+    is_snsid = models.BooleanField(default=False)
+    is_advertise = models.BooleanField(default=False) # 광고 동의 여부
 
 # 카트 테이블
 class Cart(models.Model):
