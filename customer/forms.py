@@ -8,11 +8,14 @@ User = get_user_model()
 class SignupForm(UserCreationForm):
     email = forms.EmailField(required=True)
     phone_number = forms.CharField(required=True)
-    membership_id = forms.CharField(required=False, widget=forms.HiddenInput())  # HiddenInput 위젯을 사용합니다.
+    membership_id = forms.CharField(required=True, widget=forms.HiddenInput())  # HiddenInput 위젯을 사용합니다.
+    customer_name = forms.CharField(required=True)
+    address = forms.CharField(required=False)
+    postal_code = forms.CharField(required=False)
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = UserCreationForm.Meta.fields + ('email', 'phone_number',)
+        fields = UserCreationForm.Meta.fields + ('email', 'phone_number', 'customer_name', 'address', 'postal_code',)
     
     def __init__(self, *args, **kwargs):
         super(SignupForm, self).__init__(*args, **kwargs)
