@@ -1,5 +1,27 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
+  <!-- 정렬 -->
+{% block sorted_by %}
+  <div class="container">
+  <div class="d-flex flex-wrap mt-4 "> 
+    {% if current_sorted_by == 'order' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='order' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='order' %}" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% endif %}  
+    {% if current_sorted_by == 'newest' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='newest' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>  
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='newest' %}" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>
+    {% endif %}  
+    {% if current_sorted_by == 'like' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='like' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='like' %}" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% endif %}  
+  </div>
+  </div>
+{% endblock %}
 {% block content %}
 <div class="py-5 ">
     <div class="container">
@@ -11,19 +33,16 @@
             <div class="card-body">
               <h5 class="card-title">{{product.product_name}}</h5>
               <p class="card-text"> ({{ product.price }}원 * {{ product.discount_rate }}%)</p>
+              {% csrf_token %}
               <input type="hidden" id="csrfToken" value="{{csrf_token}}">
-              <button id="likeButton-{{product.product_id}}" onclick="like_product('{{product.product_id}}')" class="btn p-0 mb-3">
-                <!-- 수정 필요 -->
-                {% if product.liked_by_current_user %}
-                <svg xmlns="http://www.w3.org/2000/svg" style="color: red;" width="25" height="25" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
+              <button type="button" onclick="like_product('{{product.product_id}}')" class="btn p-0 mb-3">
+                <!-- <svg xmlns="http://www.w3.org/2000/svg" style="color: red;" width="25" height="25" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
                   <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
-                </svg>
-                {% else %}
+                </svg> -->
                 <svg xmlns="http://www.w3.org/2000/svg" style="color: red;" width="25" height="25" fill="currentColor" class="bi bi-heart-fill" viewBox="0 0 16 16">
                   <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
                 </svg>
-                {% endif %}
-                <span id="likeCount-{{product.product_id}}">{{ product.like_set.count }}</span>개 
+                {{ product.like_set.count }}개
               </button>
 
               <p class="card-text"><a href="#" class="btn btn-primary">자세히 보기</a></p>
@@ -62,9 +81,11 @@
         var likeCount = document.getElementById('likeCount-' + product_id);
         if (response.likeTF) {
           // 좋아요 버튼 색상 변경 및 좋아요 개수 증가
+          likeButton.classList.add('text-danger');
           likeCount.innerText = parseInt(likeCount.innerText) + 1;
         } else {
           // 좋아요 버튼 색상 변경 및 좋아요 개수 감소
+          likeButton.classList.remove('text-danger');
           likeCount.innerText = parseInt(likeCount.innerText) - 1;
         }
       } else {
