@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}내 페이지{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <h2>마이페이지</h2>
+    <a href="">회원정보수정</a>
+    <br>
+    <a href="">회원탈퇴</a>
+{% else %}
+    <p>마이페이지는 로그인한 후 사용할 수 있습니다.</p>
+{% endif %}
+{% endblock %}

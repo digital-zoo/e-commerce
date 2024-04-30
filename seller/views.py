@@ -11,7 +11,7 @@ def seller_login_view(request):
         if user is not None:
             login(request, user)
             # 로그인 성공 후 리다이렉트할 페이지.
-            return redirect('home') #구매자 페이지로 수정?
+            return redirect("seller:seller_login") #구매자 페이지로 추후 수정
         else:
             # 실패한 경우, 로그인 페이지에 에러 메시지를 표시할 수 있습니다.
             return HttpResponse('로그인 실패. 다시 시도해주세요.')

@@ -64,3 +64,10 @@ class SignupView(View):
             form.save()
             return redirect("customer:login")  # 로그인 페이지로 리다이렉트
         return render(request, self.template_name, {'form': form})
+
+#마이페이지 mypage_view
+def mypage_view(request):
+    return render(request,"customer/mypage.html")
+
+def profile_edit_view(request):
+    return render(request,"customer/profile_edit.html")
