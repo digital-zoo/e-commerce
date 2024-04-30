@@ -4,6 +4,8 @@ from seller.models import *
 from customer.models import*
 from django.db.models import Sum, F
 
+
+
 # Create your views here.
 class CategoryList(ListView):
     template_name='home.html'
@@ -48,13 +50,13 @@ def cart(request, pk):
     }
     return render(request, 'customer/cart_list.html', context)
 
-def product_detail(request, pk):
-    product = Product.objects.get(product_id=pk)
-    context = {
-        'object' : product
-    }
+# def product_detail(request, pk):
+#     product = Product.objects.get(product_id=pk)
+#     context = {
+#         'object' : product
+#     }
 
-    return render(request, 'customer/product_detail.html', context)
+#     return render(request, 'customer/product_detail.html', context)
 
 from django.http import JsonResponse
 
@@ -69,3 +71,18 @@ def add_to_cart(request):
     cartitem.save()
     
     return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+
+# 연희님
+def product_detail(request, product_id):
+    user = request.user
+    product = Product.objects.get(product_id=product_id)
+    #cart, _ = Cart.objects.get_or_create(customer=user)
+    #cartitem, _ = CartItem.objects.get_or_create(cart=cart, product=product)
+    #cartitem_total_quantity = user.cartitem_set.aggregate(totalcount=Sum('quantity'))['totalcount']
+    context = {
+        'object':product,
+        #'cartitemQuantity':cartitem.quantity,
+        #'totalCartitemQuantity':cartitem_total_quantity
+    }
+    return render(request, 'customer/product_detail.html', context)
+  

@@ -28,6 +28,9 @@ class Product(models.Model):
     discount_rate = models.DecimalField(max_digits=3, decimal_places=2)
     is_option = models.BooleanField(default=True)
 
+    def category_name(self):
+        return self.category.category_name
+
 class ProductImage(models.Model):
     productimage_id = models.AutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
