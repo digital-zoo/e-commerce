@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block content %}
 <div class="container mt-5">
     <div class="row">
@@ -8,26 +9,26 @@
         <img src="{% static 'example/소고기스테이크.png' %}" alt="{{ object.name }}" class="product-image">
     </div>
     <div class="col-md-6 info-section">
-        <p>상품 카테고리 : {{ object.category_name }}</p>
-        <h2>{{ object.product_name }}</h2>
-        <h3 class="text-muted">{{ object.price }}원</h3>
-        <p>할인율 : {{ object.discount_rate }}</p>
-        <p>할인 적용가 -> 나중에 계산할 것</p>
-        <p>현재 재고 : {{ object.stock }}개</p>
-        <p>{{ object.description }}</p>
-        <div  class="col-md-6 container">
-            <input type="hidden" id="csrfToken" value="{{csrf_token}}">
-            <button type="button" onclick="modifyAmount({{object.id}}, -1)" class="btn btn-primary">-</button>
-            <button type="button" class="btn btn-secondary">
-                <span class="badge bg-secondary"><span id="currentQuantity"></span></span>
-            </button>
-            <button type="button" onclick="modifyAmount({{object.id}}, 1)" class="btn btn-danger">+</button>
+        <p class="text-muted">상품 카테고리: {{ object.category_name }}</p>
+            <h2 class="product-name">{{ object.product_name }}</h2>
+            <p class="price">{{ object.price }}원</p>
+            {% if object.discount_rate %}
+                <p class="discount">할인율: {{ object.discount_rate }}</p>
+                <p class="discounted-price">할인 적용가: {{ object.price|calc_discount:object.discount_rate }}원</p>
+            {% endif %}
+            <p class="stock">현재 재고: {{ object.stock }}개</p>
+            <p class="description">{{ object.description }}</p>
+            <div class="quantity-section">
+                <button type="button" onclick="modifyAmount({{object.id}}, -1)" class="btn btn-outline-primary">-</button>
+                <span class="badge bg-secondary quantity-badge"><span id="currentQuantity"></span></span>
+                <button type="button" onclick="modifyAmount({{object.id}}, 1)" class="btn btn-outline-danger">+</button>
             </div>
-            <div  class="container">
-                <input type="hidden" id="csrfToken" value="{{csrf_token}}">
-                <a href="#" class="btn btn-primary">장바구니 담기</a>
+            <div class="action-buttons">
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">장바구니 담기</button>
+                </form>
                 <a href="#" class="btn btn-success">바로구매</a>
-                </button>
             </div>
     </div>
     </div>
