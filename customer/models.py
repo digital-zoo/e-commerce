@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+
+
 # 멤버쉽 테이블
 class Membership(models.Model):
     membership_id = models.IntegerField(primary_key=True)
@@ -56,6 +58,7 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
 
     objects = MyUserManager()
 
+
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
         # 슈퍼유저에게는 모든 권한을 부여
@@ -70,14 +73,14 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
         return self.username
     
 
-# 3단계, customer 클래스 생성    
+# 3단계, 상위 유저 클래스를 상속받는 customer 클래스 생성    
 class Customer(MyUser):    
     membership = models.ForeignKey(Membership, on_delete=models.DO_NOTHING)    
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
     is_snsid = models.BooleanField()
-    is_advertise = models.BooleanField() # 광고 동의 여부
+    is_advertise = models.BooleanField(default=False) # 광고 동의 여부
 
 # 카트 테이블
 class Cart(models.Model):

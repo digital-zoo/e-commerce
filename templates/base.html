@@ -20,11 +20,15 @@
       </ul>
       <ul class="nav">
         {% if user.is_active %}
-        <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">로그아웃</a></li>
+        <!-- <li class="nav-item"><a href="{% url 'logout' %}" class="nav-link link-body-emphasis px-2">로그아웃</a></li> -->
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit">Logout</button>
+        </form>
         <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">비밀번호 변경</a></li>
         {% else %}
-        <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">로그인</a></li>
-        <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">회원가입</a></li>
+        <li class="nav-item"><a href="{% url 'login' %}" class="nav-link link-body-emphasis px-2">로그인</a></li>
+        <li class="nav-item"><a href="{% url 'register' %}" class="nav-link link-body-emphasis px-2">회원가입</a></li>
         {% endif %}
       </ul>
     </div>
@@ -42,10 +46,14 @@
             <button type="submit" class="btn btn-primary w-20">SEARCH</button>
         </form>
         
-        
+   
         <div class="d-flex flex-wrap mx-2"> 
             <a href="#" class="link-body-emphasis text-decoration-none mx-2">마이쿠팡</a> 
+            {% if user.is_active %}
+            <a href="{% url 'customer:cart' user.id %}" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
+            {% else %}
             <a href="#" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
+            {% endif %}
         </div>
     </div>
 

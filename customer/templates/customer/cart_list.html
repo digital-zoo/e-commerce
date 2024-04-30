@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ user }}님의 장바구니</h1>
+
+{% if object %}
+    <ul>
+        {% for item in object %}
+        <li>
+            <img src="{{ item.product.image_url }}" alt="{{ item.product.title }}" style="width:100px; height:auto;">
+            <h3>{{ item.product.title }}</h3>
+            <p>{{ item.product.description }}</p>
+            <p>가격: {{ item.product.price }}원</p>
+            <p>수량: {{ item.quantity }}</p>
+            <button onclick="location.href=#">+</button>
+            <button onclick="location.href=#">-</button>
+            <button onclick="location.href=#">삭제</button>
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <h2>장바구니가 비어있습니다.</h2>
+{% endif %}
+
+<!-- 총 결제 금액 및 구매하기 버튼을 오른쪽에 배치하기 위한 div -->
+<div class="fixed-checkout">
+    <h2>총 결제 금액: {{ total_price }}원</h2>
+    <button onclick="location.href='#'">구매하기</button>
+</div>
+
+<style>
+    .fixed-checkout {
+        position: fixed; /* 뷰포트에 대해 고정 */
+        top: 150px; /* 네비게이션 바의 높이에 따라 조정 필요 */
+        right: 300px; /* 오른쪽 여백 */
+        width: 300px; /* 필요에 따라 조정 */
+        background-color: white; /* 배경색 */
+        padding: 10px; /* 패딩 */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
+        z-index: 1000; /* 다른 요소 위에 표시 */
+    }
+</style>
+
+{% endblock %}

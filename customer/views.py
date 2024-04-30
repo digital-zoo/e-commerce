@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 from seller.models import *
+from customer.models import*
+from django.db.models import Sum, F
 
 # Create your views here.
 class CategoryList(ListView):
@@ -25,3 +27,45 @@ class CategoryList(ListView):
         context['current_category'] = category
         return context
     
+def cart(request, pk):
+    # user = request.user
+    # cart, created = Cart.objects.get_or_create(customer_id=user.id)
+
+    # cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
+
+    # if len(cartitem):
+    #     print('nothing')
+    # else:
+    #     print('물건있음')
+
+    # pass
+    cart, created = Cart.objects.get_or_create(customer_id=pk) # get
+    cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
+    total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+    context = {
+        'object' : cartitem,
+        'total_price' : total_price
+    }
+    return render(request, 'customer/cart_list.html', context)
+
+def product_detail(request, pk):
+    product = Product.objects.get(product_id=pk)
+    context = {
+        'object' : product
+    }
+
+    return render(request, 'customer/product_detail.html', context)
+
+from django.http import JsonResponse
+
+def add_to_cart(request):
+    user = request.user
+    product_id = request.POST['product_id']
+    product = Product.objects.get(product_id=product_id)
+    
+    cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
+    cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity':0})
+    cartitem.quantity += int(request.POST['quantity'])
+    cartitem.save()
+    
+    return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
