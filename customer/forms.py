@@ -8,6 +8,7 @@ User = get_user_model()
 class SignupForm(UserCreationForm):
     email = forms.EmailField(required=True)
     phone_number = forms.CharField(required=True)
+    
     membership_id = forms.CharField(required=True, widget=forms.HiddenInput())  # HiddenInput 위젯을 사용합니다.
     customer_name = forms.CharField(required=True)
     address = forms.CharField(required=False)

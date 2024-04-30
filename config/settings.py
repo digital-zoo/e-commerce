@@ -122,7 +122,7 @@ STATICFILES_DIRS = [BASE_DIR/'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'customer.Customer' # 사용자 정의 user 모델을 Customer로 설정
+AUTH_USER_MODEL = 'customer.MyUser' # 사용자 정의 user 모델을 Customer로 설정
 # 사용자 정의 user 모델은 1개만 설정할 수 있기 때문에 Seller는 잠시 보류
 
 MEDIA_URL = '/media/'

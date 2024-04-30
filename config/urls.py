@@ -24,4 +24,5 @@ urlpatterns = [
     # 홈화면 
     path('', HomeView.as_view(),name='home'),
     path('customer/', include('customer.urls')),
+    path('seller/', include('seller.urls')),
 ]
