@@ -5,7 +5,9 @@
 {% block content %}
 {% if user.is_authenticated %}
     <h2>마이페이지</h2>
-    <a href="">회원정보수정</a>
+    <a href="{%url 'customer:password_edit'%}">비밀번호 수정</a>
+    <br>
+    <a href="{%url 'customer:profile_edit'%}">회원정보 수정</a>
     <br>
     <a href="">회원탈퇴</a>
 {% else %}

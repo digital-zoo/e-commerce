@@ -4,8 +4,12 @@ from seller.models import *
 from django.contrib.auth import authenticate, login,logout
 from django.http import HttpResponse
 from .forms import SignupForm
-# from django.urls import reverse_lazy
 from django.views import View
+from .models import Customer,Membership
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.contrib import messages
+from django.db.models import Q
 
 # Create your views here.
 class CategoryList(ListView):
@@ -69,5 +73,60 @@ class SignupView(View):
 def mypage_view(request):
     return render(request,"customer/mypage.html")
 
+def password_edit_view(request):
+    return render(request,"customer/password_edit.html")
+
 def profile_edit_view(request):
-    return render(request,"customer/profile_edit.html")
+    if request.method == "POST":
+        user = request.user 
+
+        new_email = request.POST.get("email")        
+        # 현재 사용자를 제외한 다른 사용자가 제출된 이메일을 사용하고 있는지 확인
+        if MyUser.objects.filter(~Q(pk=user.pk), email=new_email).exists():
+            # 만약 제출된 이메일이 현재 사용자를 제외한 다른 사용자에 의해 이미 사용되고 있다면 오류 메시지를 설정하고 리디렉션
+            messages.error(request, "입력하신 이메일은 이미 사용 중입니다.")
+            return redirect('customer:profile_edit')        
+        user.email = new_email
+
+        new_phone_number = request.POST.get("phone_number")      
+        if MyUser.objects.filter(~Q(pk=user.pk), phone_number=new_phone_number).exists():            
+            messages.error(request, "입력하신 휴대폰 번호는 이미 사용 중입니다.")
+            return redirect('customer:profile_edit')        
+        user.phone_number = new_phone_number
+        
+        user.save()        
+        
+        customer = Customer.objects.get(pk=user.pk)
+        customer.customer_name = request.POST.get("customer_name")
+        customer.address = request.POST.get("address")
+        customer.postal_code = request.POST.get("postal_code")
+        customer.save()
+        
+        messages.success(request, "프로필이 성공적으로 업데이트되었습니다.")
+        return redirect('customer:profile_edit')
+    else:
+        if not request.user.is_authenticated:
+            # 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
+            return redirect('customer:login')
+
+        try:
+            # 현재 로그인한 사용자로부터 Customer 정보를 가져옵니다.
+            customer = Customer.objects.get(pk=request.user.pk)
+        except Customer.DoesNotExist:
+            # Customer 정보가 존재하지 않을 경우 처리
+            customer = None
+        
+        try:        
+            membership = Membership.objects.get(membership_id=customer.membership_id)
+        except Membership.DoesNotExist:        
+            membership = None
+
+        context = {
+            'grade':membership.grade if membership else "비어있음",
+                        
+            'customer_name': customer.customer_name if customer else "비어있음",
+            'address':customer.address if customer else "비어있음",
+            'postal_code':customer.postal_code if customer else "비어있음",        
+        }
+        
+        return render(request, 'customer/profile_edit.html', context)
