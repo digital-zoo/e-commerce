@@ -1,15 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}내 페이지{% endblock %}
-
 {% block content %}
 {% if user.is_authenticated %}
     <h2>마이페이지</h2>
-    <a href="{%url 'customer:password_edit'%}">비밀번호 수정</a>
+    <a href="{%url 'customer:change_password'%}">비밀번호 수정</a>
     <br>
     <a href="{%url 'customer:profile_edit'%}">회원정보 수정</a>
     <br>
-    <a href="">회원탈퇴</a>
+    <a href="{%url 'customer:delete_customer'%}">회원탈퇴</a>
 {% else %}
     <p>마이페이지는 로그인한 후 사용할 수 있습니다.</p>
 {% endif %}

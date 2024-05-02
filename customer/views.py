@@ -6,10 +6,13 @@ from django.http import HttpResponse
 from .forms import SignupForm
 from django.views import View
 from .models import Customer,Membership
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+# from django.http import HttpResponseRedirect
+# from django.urls import reverse
 from django.contrib import messages
 from django.db.models import Q
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 class CategoryList(ListView):
@@ -73,9 +76,6 @@ class SignupView(View):
 def mypage_view(request):
     return render(request,"customer/mypage.html")
 
-def password_edit_view(request):
-    return render(request,"customer/password_edit.html")
-
 def profile_edit_view(request):
     if request.method == "POST":
         user = request.user 
@@ -130,3 +130,31 @@ def profile_edit_view(request):
         }
         
         return render(request, 'customer/profile_edit.html', context)
+
+def change_password_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # 중요: 비밀번호가 변경된 후에도 사용자가 로그아웃되지 않도록 함
+            messages.success(request, "비밀번호 변경 성공")
+            return redirect('customer:mypage')
+        else:
+            messages.error(request, "비밀번호 변경이 실패하였습니다.다시 시도 해주세요.")
+            return redirect('customer:change_password')
+    else:
+        form = PasswordChangeForm(request.user)
+        return render(request, 'customer/change_password.html', {'form': form})
+    
+@login_required
+def delete_customer_view(request):
+    if request.method == 'POST' and request.POST['delete_customer?'] == '회원탈퇴':
+        # 현재 로그인한 사용자를 삭제합니다.
+        user = request.user
+        user.delete()
+        messages.success(request, '계정이 성공적으로 삭제되었습니다.')
+        return redirect('home')
+    else:
+        messages.error(request, '계정이 삭제가 실패했습니다.')
+        return render(request, 'customer/delete_customer.html')
+    

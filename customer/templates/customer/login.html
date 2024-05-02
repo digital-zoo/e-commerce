@@ -1,4 +1,5 @@
-<br>
+{% extends 'base.html' %}
+{% block content %}
 {%if user.is_authenticated %}
     로그인 성공
     {{user.username}}님 환영합니다.
@@ -16,3 +17,4 @@
 <a href="{% url 'customer:signup' %}">회원가입</a>
 
 {% endif %}
+{% endblock %}
