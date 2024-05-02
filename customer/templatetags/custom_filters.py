@@ -9,3 +9,7 @@ def calc_discount(price, discount_rate):
 @register.filter
 def multiply_by_100(value):
     return value * 100
+
+@register.filter
+def mul(price, quantity):
+    return price * int(quantity)
