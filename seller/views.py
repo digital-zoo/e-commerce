@@ -1,26 +1,31 @@
 from django.shortcuts import render, redirect
 from .forms import SellerSignupForm
-from django.contrib.auth import authenticate, login,logout
+from django.contrib.auth import authenticate,login,logout
 from django.http import HttpResponse
+from django.contrib import messages
+from seller.backends import SellerAuthenticationBackend
 
 def seller_login_view(request):
-    if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            # 로그인 성공 후 리다이렉트할 페이지.
-            return redirect("seller:seller_login") #구매자 페이지로 추후 수정
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        # SellerAuthenticationBackend의 인스턴스를 생성하고 authenticate를 호출합니다.
+        backend = SellerAuthenticationBackend()
+        seller = backend.authenticate(request, username=username, password=password)
+        
+        if seller:  # 인증 성공
+            # 인증된 사용자를 session에 등록합니다.
+            login(request, seller, backend='seller.backends.SellerAuthenticationBackend')
+            # return redirect('home')
+            return HttpResponse('로그인 성공')
         else:
-            # 실패한 경우, 로그인 페이지에 에러 메시지를 표시할 수 있습니다.
-            return HttpResponse('로그인 실패. 다시 시도해주세요.')
-    else:
-        # GET 요청일 경우 로그인 폼을 보여주는 페이지를 렌더링
-        return render(request,"seller/seller_login.html")
+            return HttpResponse('로그인 실패. 판매자 계정 정보를 확인해주세요.')
+
+    return render(request, 'seller/seller_login.html')
 
 def seller_logout_view(request):
-    logout(request)
+    logout(request)    
     return redirect("seller:seller_login")
 
 def seller_signup_view(request):

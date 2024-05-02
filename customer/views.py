@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
 from seller.models import *
-from django.contrib.auth import authenticate, login,logout
+from django.contrib.auth import authenticate,login,logout
 from django.http import HttpResponse
 from .forms import SignupForm
 from django.views import View

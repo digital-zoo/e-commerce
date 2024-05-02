@@ -127,3 +127,8 @@ AUTH_USER_MODEL = 'customer.Customer' # 사용자 정의 user 모델을 Customer
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
+    'seller.backends.SellerAuthenticationBackend', # Seller 인증 백엔드
+]
