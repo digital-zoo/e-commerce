@@ -17,11 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from . import views
+
 app_name = 'seller'
 
 urlpatterns = [
     path('', views.seller_index, name='seller_index' ),
     path('add_product/', views.add_product, name='add_product'),
-
-    
+    path('edit_product/<int:product_id>/', views.edit_product, name='edit_product'),
+    path('order_manage/', views.order_manage, name='order_manage'),
 ]
+    #path('manage_product/', views.manage_product, name='manage_product'),
+    
+

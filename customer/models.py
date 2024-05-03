@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth import get_user_model
 
-# 멤버쉽 테이블
+# 멤버쉽 테이블\\
 class Membership(models.Model):
     membership_id = models.IntegerField(primary_key=True)
     grade = models.CharField(max_length=255,unique=True)

@@ -14,7 +14,6 @@ class Category(models.Model):
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
 
 
-
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
