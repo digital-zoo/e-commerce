@@ -3,11 +3,14 @@
 {% load custom_filters %}
 {% block content %}
 <h1>주문서</h1>
+<a href="{% url 'customer:s_logout' %}">로그아웃</a>
 <h2>배송 정보</h2>
 <div class="shipping-info">
     <div class="row mb-3">
         <div class="col-sm-6">
             {배송지 : 유저 기본 주소}
+            <br>{{ user }}로 로그인 된 상태
+            <p>{{user.email}}</p>
         </div>
         <div class="col">
             <button type="button" class="btn btn-secondary float-end">배송지 목록</button>

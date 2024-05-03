@@ -3,6 +3,41 @@ from django.views.generic import ListView
 from seller.models import *
 from .models import *
 from django.db.models import Sum
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.shortcuts import redirect
+
+# 테스트용 가상 로그인
+def simulate_login(request):
+    # 기존에 생성한 사용자 정보 
+    username = 'kkk'
+    password = '1'
+
+    # 해당 사용자로 로그인 시도
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        # 로그인 성공 시 세션에 사용자 정보 저장
+        login(request, user)
+        # return render(request, 'customer/checkout.html', {'user' : user})
+    else:
+        # 로그인 실패 시 오류 메시지 추가
+        print('로그인 실패했습니다')
+
+def s_logout(request):
+    next_page = request.GET.get('next')
+    if request.user.is_authenticated:
+        # 로그인되어 있는 경우 로그아웃 수행
+        print("로그아웃 성공적으로 진행함")
+        logout(request)
+    if next_page:
+        # 로그아웃 후에 이전 페이지로 리다이렉션됩니다.
+        return redirect(next_page)
+    else:
+        # 이전 페이지가 없으면 홈페이지로 리다이렉션됩니다.
+        return redirect('home')  # 이 부분에서 적절한 리다이렉션 대상을 설정해야 합니다.
+
+        
+  
 
 # Create your views here.
 class CategoryList(ListView):
@@ -42,6 +77,8 @@ def product_detail(request, product_id):
     return render(request, 'customer/product_detail.html', context)
 
 def quick_checkout(request):
+    simulate_login(request)
+    user = request.user
     # 선택한 상품 불러오기
     product_id = request.GET.get('product_id')
     product = Product.objects.get(product_id=product_id)
@@ -51,10 +88,12 @@ def quick_checkout(request):
     discounted_price = product.price * (1-product.discount_rate)
     final_price = discounted_price * int(quantity)
     context = {
+    'user' : user,
     'product': product,
     'quantity': quantity,
     'discounted_price' : discounted_price,
     'final_price' : final_price
     }
     return render(request, 'customer/checkout.html', context)
-  
+
+
