@@ -4,7 +4,6 @@
     판매자 {{user.username}}님 환영합니다.
     <a href="{% url 'seller:seller_logout' %}">로그아웃</a>
 {%else%}
-
 <form action="" method="post">
     {% csrf_token %}
     <label for="username">판매자 이름:</label>
