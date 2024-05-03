@@ -1,7 +1,9 @@
 from django.shortcuts import render,get_object_or_404
 from django.views.generic import ListView
+from django.db.models import Q
 from seller.models import *
 from customer.models import *
+from django.http import HttpResponse
 
 # Create your views here.
 class CategoryList(ListView):
@@ -109,3 +111,15 @@ def like_product(request,product_id):
         return JsonResponse({'success': True, 'likeTF': likeTF})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request'})
+    
+
+def search_product(request):
+    if request.method == 'POST':
+
+        search_word = request.POST.get('search_word')  # POST 요청으로부터 검색어 가져오기
+        if search_word:
+            product_list = Product.objects.filter(Q(product_name__icontains=search_word) | Q(description__icontains=search_word)).distinct()
+            # 검색 결과를 템플릿에 전달
+        else:
+            product_list = []
+        return render(request, 'customer/search.html', {'products': product_list, 'search_word': search_word})  

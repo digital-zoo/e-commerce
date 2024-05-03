@@ -8,4 +8,5 @@ urlpatterns = [
     path('<str:sorted_by>/', SortedList.as_view() ,name='sorted_list'),
     path('<int:category_id>/<str:sorted_by>/', CategorySortedList.as_view() ,name='category_sorted_list'),
     path('like/<int:product_id>/', like_product, name='like_product'),
+    path('product/search/', search_product, name='search_product'),
 ]

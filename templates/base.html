@@ -36,10 +36,11 @@
         <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none "> 
             <span class="fs-4">COUPANG</span>
         </a>
-        
-        <form class="d-flex align-items-center w-50" action="" method="post">{% csrf_token %}
-            <input type="search" class="form-control w-80" placeholder="Search..." name="search_word">
-            <button type="submit" class="btn btn-primary w-20">SEARCH</button>
+
+        <form class="d-flex align-items-center w-50" method="POST" action="{% url 'customer:search_product' %}">
+          {% csrf_token %}
+          <input type="text" class="form-control w-80" placeholder="Search..." name="search_word">
+          <button type="submit" class="btn btn-primary w-20">SEARCH</button>
         </form>
         
         
