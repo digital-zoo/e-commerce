@@ -36,9 +36,6 @@ from django.shortcuts import redirect
 #         # 이전 페이지가 없으면 홈페이지로 리다이렉션됩니다.
 #         return redirect('home')  # 이 부분에서 적절한 리다이렉션 대상을 설정해야 합니다.
 
-        
-  
-
 # Create your views here.
 class CategoryList(ListView):
     template_name='home.html'
