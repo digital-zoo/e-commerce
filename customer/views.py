@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views.generic import ListView
 from seller.models import *
 from customer.models import*
-from django.db.models import Sum, F
+from django.db.models import Sum, F, FloatField
 
 
 
@@ -44,9 +44,12 @@ def cart(request, pk):
     cart, created = Cart.objects.get_or_create(customer_id=pk) # get
     cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
     total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+    discount_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
     context = {
         'object' : cartitem,
-        'total_price' : total_price
+        'total_price' : total_price,
+        'discount_price' : total_price - discount_price,
+        'final_price' : discount_price,
     }
     return render(request, 'customer/cart_list.html', context)
 
@@ -72,7 +75,7 @@ def add_to_cart(request):
     
     return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
 
-# 연희님
+# 연희님 코드
 def product_detail(request, product_id):
     user = request.user
     product = Product.objects.get(product_id=product_id)
@@ -86,3 +89,49 @@ def product_detail(request, product_id):
     }
     return render(request, 'customer/product_detail.html', context)
   
+# 장바구니 삭제 버튼
+def delete_cart_item(request, user_id):
+    if request.method == 'POST':
+        try:
+            cart = Cart.objects.get(customer_id=user_id)
+            CartItem.objects.get(cart_id=cart.cart_id, product_id=request.POST['product_id']).delete()
+            total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+            # item_id를 사용하여 해당 항목을 삭제하는 로직 구현
+            # 예: CartItem.objects.get(id=item_id).delete()
+            return JsonResponse({'success': True, 'total_price' : total_price})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+    
+# 장바구니 수량 변경
+def update_quantity(request, user_id):
+    # 장바구니의 수량을 변경해야함!
+    cart = Cart.objects.get(customer_id=user_id)
+    cartitem = CartItem.objects.get(cart_id=cart.cart_id, product_id=request.POST['product_id'])
+    cartitem.quantity = int(request.POST['quantity'])
+    cartitem.save()
+    total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+    final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+    discount_price = total_price - final_price
+    one_price = cartitem.product.price * (1 - cartitem.product.discount_rate) * cartitem.quantity
+    return JsonResponse({
+        'success' : True,
+        'total_price': total_price,
+        'discount_price': discount_price,
+        'final_price': final_price,
+        'one_price' : int(one_price)
+    })
+
+
+# 장바구니 수량에 따른 가격변경
+def get_cart_summary(request):
+    total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+    final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+    discount_price = total_price - final_price  # 예시 값
+    return JsonResponse({
+        'success' : True,
+        'total_price': total_price,
+        'discount_price': discount_price,
+        'final_price': final_price
+    })

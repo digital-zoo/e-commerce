@@ -1,8 +1,222 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
 {% block content %}
-<h1>{{ user }}님의 장바구니</h1>
 
-{% if object %}
+
+<div class="container mt-5">
+    <h2>{{ user }}님의 장바구니</h2>
+    <hr>
+    <!-- Flex container 추가 -->
+    <div class="shopping-cart-container d-flex">
+        {% if object %}
+        <div class="cart-items">
+            {% for item in object %}
+                <!-- cart-item의 구조 시작 -->
+                <div>
+                <div class="cart-item d-flex align-items-center justify-content-start mb-3 p-2 bg-light rounded" data-item-id="{{ item.product_id }}">
+                    <a href="{% url 'customer:product_detail' item.product_id %}" class="mr-3">
+                        <div class="img-container">
+                            <img class="img-fluid rounded" src="{% static 'example/소고기스테이크.png' %}" alt="{{ item.product.product_name }}" width="80">
+                        </div>
+                    </a>
+                    <div class="flex-grow-1 d-flex flex-column justify-content-between"> <!-- 수정된 부분: flex-direction을 column으로 설정 -->
+                        <button class="btn btn-danger remove-button align-self-start">삭제</button> <!-- 수정된 부분: 좌측 상단에 배치 -->
+                        <div>
+                            <div class="fw-bold px-4">
+                                <a href="{% url 'customer:product_detail' item.product_id %}">{{ item.product.product_name }}</a>
+                            </div>
+                            <div class="px-4">할인 : <span class="text-decoration-line-through text-secondary">{{ item.product.price }}원</span> -> {{ item.product.price|calc_discount:item.product.discount_rate|floatformat:"0" }}원</div>
+                            <div class="one-price" style="font-weight: bold; font-size: large;" data-item-id="{{ item.product_id }}">{{ one_price }}원</div>
+                        </div>
+                        <div class="quantity-controls d-flex align-items-center"> <!-- 수정된 부분: 위치 변경 -->
+                            <button class="btn btn-outline-secondary decrement-button">-</button>
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-field text-center mx-2" style="width: 60px;" readonly>
+                            <button class="btn btn-outline-secondary increment-button">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <!-- cart-item의 구조 끝 -->
+            {% endfor %}
+        {% else %}
+            <h2>장바구니가 비어있습니다.</h2>
+        {% endif %}
+        <!-- 총 결제 금액 및 구매하기 버튼을 오른쪽에 배치하기 위한 div -->
+    </div>
+    <div class="fixed-checkout">
+        <h3>총 상품 가격 : {{ total_price }}원</h3>
+        <h3>총 할인 : {{ discount_price|floatformat:"0" }}원</h3>
+        <h3>최종 가격 : {{ final_price|floatformat:"0" }}원</h3>
+        <button onclick="location.href='#'">구매하기</button>
+    </div>
+</div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+{% csrf_token %}
+<script type="text/javascript">
+
+
+    // CSRF 토큰을 JavaScript 변수로 저장합니다.
+    var csrfToken = '{{ csrf_token }}';
+
+    $(document).ready(function() {
+        $('.remove-button').click(function() {
+            // 이 버튼과 관련된 cart-item 요소를 찾아옵니다.
+            var itemElement = $(this).closest('.cart-item');
+            var productId = itemElement.data('item-id');
+    
+            $.ajax({
+                url: '{% url "customer:delete_cart_item" user_id=user.id %}', //  서버의 URL을 적절하게 수정하세요.
+                type: 'POST', // DELETE 요청을 사용합니다.
+                dataType: 'json', // 응답으로 기대되는 데이터 유형입니다.
+                data: {
+                    'product_id':productId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken); // CSRF 토큰을 요청 헤더에 추가합니다.
+                },
+                success: function(result) {
+                    // 성공적으로 서버에서 항목을 삭제했다면, HTML에서도 해당 항목을 제거합니다.
+                    if(result.success) {
+                        itemElement.remove();
+                        // 여기에 총 금액을 업데이트하는 로직을 추가할 수 있습니다.
+                        // 총 결제 금액 업데이트 로직 추가
+                        if(result.total_price !== undefined) {
+                            $('.fixed-checkout h2').text('총 결제 금액: ' + result.total_price + '원');
+                        }
+                    } else {
+                        alert("항목을 삭제하는데 문제가 발생했습니다.");
+                    }                
+                },
+                error: function(xhr, status, error) {
+                    // 에러 핸들링
+                    alert("항목을 삭제하는 과정에서 오류가 발생했습니다.");
+                }
+            });
+        });
+        // 수량 감소 버튼 처리
+        $('.decrement-button').click(function() {
+            var itemElement = $(this).closest('.cart-item');
+            var productId = itemElement.data('item-id');
+            var quantityField = itemElement.find('.quantity-field');
+            var newQuantity = parseInt(quantityField.val()) - 1;
+
+            // 수량이 1 이상일 때만 요청을 보냅니다.
+            if(newQuantity >= 1) {
+                updateQuantity(productId, newQuantity, quantityField);
+            }
+            });
+        // 수량 증가 버튼 처리
+        $('.increment-button').click(function() {
+            var itemElement = $(this).closest('.cart-item');
+            var productId = itemElement.data('item-id');
+            var quantityField = itemElement.find('.quantity-field');
+            var newQuantity = parseInt(quantityField.val()) + 1;
+
+            updateQuantity(productId, newQuantity, quantityField);
+            });
+        // 수량 업데이트 함수
+        function updateQuantity(productId, newQuantity, fieldToUpdate) {
+            $.ajax({
+                url: '{% url "customer:update_quantity" user_id=user.id %}', // URL을 적절히 수정하세요.
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    'product_id': productId,
+                    'quantity': newQuantity,
+                    'csrfmiddlewaretoken': csrfToken
+                },
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                },
+                success: function(result) {
+                    if(result.success) {
+                        fieldToUpdate.val(newQuantity); // 새로운 수량으로 업데이트
+                        // 최종 가격 업데이트
+                        if(result.total_price !== undefined && result.discount_price !== undefined && result.final_price !== undefined && result.one_price !== undefined) {
+                            $('h3:contains("총 상품 가격")').text('총 상품 가격: ' + result.total_price + '원');
+                            $('h3:contains("총 할인")').text('총 할인: ' + result.discount_price + '원');
+                            $('h3:contains("최종 가격")').text('최종 가격: ' + result.final_price + '원');
+                            $('.one-price[data-item-id="' + productId + '"]').text(result.one_price + '원');
+                        }
+                    } else {
+                        alert("수량을 변경하는데 문제가 발생했습니다.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert("수량을 변경하는 과정에서 오류가 발생했습니다.");
+                }
+            });        
+        }
+        
+        
+    });
+
+    
+</script>
+    
+
+<style>
+    .shopping-cart-container {
+    display: flex; /* Flexbox를 사용 */
+    justify-content: space-between; /* 요소들을 서로 간에 공간을 두고 배치 */
+    }
+
+    .remove-button {
+        position: absolute; /* 이것을 추가 */
+        top: 10px; /* 위쪽으로부터의 거리 */
+        right: 10px; /* 오른쪽으로부터의 거리 */
+    }
+
+    .quantity-controls {
+        position: absolute; /* 이것을 추가 */
+        bottom: 10px; /* 아래쪽으로부터의 거리 */
+        right: 10px; /* 오른쪽으로부터의 거리 */
+    }
+
+    .img-container {
+        width: 140px;
+        height: 140px;
+        float: left; /* 이미지가 좌측에 배치 */
+        margin-right: 20px; /* 이미지와 오른쪽 콘텐츠 사이의 간격 */
+    }
+
+    .img-fluid {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* 이미지가 중요한 부분이 잘리지 않도록 하면서 비율을 유지 */
+    }
+
+    .cart-item {
+        position: relative;
+        width: 900px;
+        height: 200px;  /* 필요에 따라 조정할 수 있음 */
+    }
+
+    .cart-items {
+    
+    }
+
+    .fixed-checkout {
+        /*position: fixed; /* 뷰포트에 대해 고정 */
+        /*top: 200px; /* 네비게이션 바의 높이에 따라 조정 필요 */
+        /*right: 130px; /* 오른쪽 여백 */
+        width: 350px; /* 필요에 따라 조정 */
+        background-color: white; /* 배경색 */
+        padding: 10px; /* 패딩 */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
+        z-index: 1000; /* 다른 요소 위에 표시 */
+    }
+</style>
+
+{% endblock %}
+
+
+<!-- {% if object %}
     <ul>
         {% for item in object %}
         <li>
@@ -19,25 +233,4 @@
     </ul>
 {% else %}
     <h2>장바구니가 비어있습니다.</h2>
-{% endif %}
-
-<!-- 총 결제 금액 및 구매하기 버튼을 오른쪽에 배치하기 위한 div -->
-<div class="fixed-checkout">
-    <h2>총 결제 금액: {{ total_price }}원</h2>
-    <button onclick="location.href='#'">구매하기</button>
-</div>
-
-<style>
-    .fixed-checkout {
-        position: fixed; /* 뷰포트에 대해 고정 */
-        top: 150px; /* 네비게이션 바의 높이에 따라 조정 필요 */
-        right: 300px; /* 오른쪽 여백 */
-        width: 300px; /* 필요에 따라 조정 */
-        background-color: white; /* 배경색 */
-        padding: 10px; /* 패딩 */
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
-        z-index: 1000; /* 다른 요소 위에 표시 */
-    }
-</style>
-
-{% endblock %}
+{% endif %} -->
