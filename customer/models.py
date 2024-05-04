@@ -93,6 +93,9 @@ class CartItem(models.Model):
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)  # product와 외래키 관계, 
     quantity = models.IntegerField()  # 수량은 정수형
 
+    def get_total_price(self):
+        return int(self.quantity * self.product.price * (1 - (self.product.discount_rate)))
+    
 class Order(models.Model):
     order_id = models.AutoField(primary_key=True) 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)

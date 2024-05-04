@@ -30,28 +30,24 @@ class CategoryList(ListView):
         return context
     
 def cart(request, pk):
-    # user = request.user
-    # cart, created = Cart.objects.get_or_create(customer_id=user.id)
-
-    # cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
-
-    # if len(cartitem):
-    #     print('nothing')
-    # else:
-    #     print('물건있음')
-
-    # pass
-    cart, created = Cart.objects.get_or_create(customer_id=pk) # get
+    cart, _ = Cart.objects.get_or_create(customer_id=pk) # get
     cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
-    total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
-    discount_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
-    context = {
-        'object' : cartitem,
-        'total_price' : total_price,
-        'discount_price' : total_price - discount_price,
-        'final_price' : discount_price,
-    }
-    return render(request, 'customer/cart_list.html', context)
+    if cartitem: # 장바구니에 물건이 있는 경우 
+
+        total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+        discount_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+        
+        context = {
+            'object' : cartitem,
+            'total_price' : total_price,
+            'discount_price' : total_price - discount_price,
+            'final_price' : discount_price,
+            
+        }
+        return render(request, 'customer/cart_list.html', context)
+    
+    else: # 장바구니에 물건이 없는 경우
+        return render(request, 'customer/cart_list.html')
 
 # def product_detail(request, pk):
 #     product = Product.objects.get(product_id=pk)
@@ -94,11 +90,27 @@ def delete_cart_item(request, user_id):
     if request.method == 'POST':
         try:
             cart = Cart.objects.get(customer_id=user_id)
-            CartItem.objects.get(cart_id=cart.cart_id, product_id=request.POST['product_id']).delete()
-            total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
-            # item_id를 사용하여 해당 항목을 삭제하는 로직 구현
-            # 예: CartItem.objects.get(id=item_id).delete()
-            return JsonResponse({'success': True, 'total_price' : total_price})
+            CartItem.objects.get(cart_id=cart.cart_id, product_id=int(request.POST['product_id'])).delete()
+            cartitem = CartItem.objects.all()
+            if cartitem: # 장바구니에 남은 물건이 있는 경우
+                total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+                final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+                discount_price = total_price - final_price
+                
+
+                return JsonResponse({
+                    'success': True, 
+                    'total_price' : total_price,
+                    'discount_price': discount_price,
+                    'final_price': final_price
+                    })
+            else: # 장바구니에 남은 물건이 없는 경우
+                return JsonResponse({
+                    'success': True, 
+                    'total_price' : 0,
+                    'discount_price': 0,
+                    'final_price': 0
+                    })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     else:

@@ -14,44 +14,45 @@
             {% for item in object %}
                 <!-- cart-item의 구조 시작 -->
                 <div>
-                <div class="cart-item d-flex align-items-center justify-content-start mb-3 p-2 bg-light rounded" data-item-id="{{ item.product_id }}">
-                    <a href="{% url 'customer:product_detail' item.product_id %}" class="mr-3">
-                        <div class="img-container">
-                            <img class="img-fluid rounded" src="{% static 'example/소고기스테이크.png' %}" alt="{{ item.product.product_name }}" width="80">
-                        </div>
-                    </a>
-                    <div class="flex-grow-1 d-flex flex-column justify-content-between"> <!-- 수정된 부분: flex-direction을 column으로 설정 -->
-                        <button class="btn btn-danger remove-button align-self-start">삭제</button> <!-- 수정된 부분: 좌측 상단에 배치 -->
-                        <div>
-                            <div class="fw-bold px-4">
-                                <a href="{% url 'customer:product_detail' item.product_id %}">{{ item.product.product_name }}</a>
+                    <div class="cart-item d-flex align-items-center justify-content-start mb-3 p-2 bg-light rounded" data-item-id="{{ item.product_id }}">
+                        <a href="{% url 'customer:product_detail' item.product_id %}" class="mr-3">
+                            <div class="img-container">
+                                <img class="img-fluid rounded" src="{% static 'example/소고기스테이크.png' %}" alt="{{ item.product.product_name }}" width="80">
                             </div>
-                            <div class="px-4">할인 : <span class="text-decoration-line-through text-secondary">{{ item.product.price }}원</span> -> {{ item.product.price|calc_discount:item.product.discount_rate|floatformat:"0" }}원</div>
-                            <div class="one-price" style="font-weight: bold; font-size: large;" data-item-id="{{ item.product_id }}">{{ one_price }}원</div>
-                        </div>
-                        <div class="quantity-controls d-flex align-items-center"> <!-- 수정된 부분: 위치 변경 -->
-                            <button class="btn btn-outline-secondary decrement-button">-</button>
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-field text-center mx-2" style="width: 60px;" readonly>
-                            <button class="btn btn-outline-secondary increment-button">+</button>
+                        </a>
+                        <div class="flex-grow-1 d-flex flex-column justify-content-between">
+                            <button class="btn btn-danger remove-button align-self-start">삭제</button>
+                            <div>
+                                <div class="fw-bold px-4">
+                                    <a href="{% url 'customer:product_detail' item.product_id %}">{{ item.product.product_name }}</a>
+                                </div>
+                                <div class="px-4">할인 : <span class="text-decoration-line-through text-secondary">{{ item.product.price }}원</span> -> {{ item.product.price|calc_discount:item.product.discount_rate|floatformat:"0" }}원</div>
+                                <div class="one-price" style="font-weight: bold; font-size: large;" data-item-id="{{ item.product_id }}">{{ item.get_total_price }}원</div>
+                            </div>
+                            <div class="quantity-controls d-flex align-items-center">
+                                <button class="btn btn-outline-secondary decrement-button">-</button>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control quantity-field text-center mx-2" style="width: 60px;" readonly>
+                                <button class="btn btn-outline-secondary increment-button">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
                 <!-- cart-item의 구조 끝 -->
             {% endfor %}
+        </div>
         {% else %}
             <h2>장바구니가 비어있습니다.</h2>
         {% endif %}
         <!-- 총 결제 금액 및 구매하기 버튼을 오른쪽에 배치하기 위한 div -->
-    </div>
-    <div class="fixed-checkout">
-        <h3>총 상품 가격 : {{ total_price }}원</h3>
-        <h3>총 할인 : {{ discount_price|floatformat:"0" }}원</h3>
-        <h3>최종 가격 : {{ final_price|floatformat:"0" }}원</h3>
-        <button onclick="location.href='#'">구매하기</button>
+        <div class="fixed-checkout">
+            <h3>총 상품 금액 : {{ total_price }}원</h3>
+            <h3>총 할인 금액 : {{ discount_price|floatformat:"0" }}원</h3>
+            <h3>총 결제 금액 : {{ final_price|floatformat:"0" }}원</h3>
+            <button onclick="location.href='#'">구매하기</button>
+        </div>
     </div>
 </div>
-</div>
+
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
@@ -85,8 +86,10 @@
                         itemElement.remove();
                         // 여기에 총 금액을 업데이트하는 로직을 추가할 수 있습니다.
                         // 총 결제 금액 업데이트 로직 추가
-                        if(result.total_price !== undefined) {
-                            $('.fixed-checkout h2').text('총 결제 금액: ' + result.total_price + '원');
+                        if(result.total_price !== undefined && result.discount_price !== undefined && result.final_price !== undefined) {
+                            $('h3:contains("총 상품 금액")').text('총 상품 금액: ' + result.total_price + '원');
+                            $('h3:contains("총 할인 금액")').text('총 할인 금액: ' + result.discount_price + '원');
+                            $('h3:contains("총 결제 금액")').text('총 결제 금액: ' + result.final_price + '원');
                         }
                     } else {
                         alert("항목을 삭제하는데 문제가 발생했습니다.");
@@ -138,9 +141,9 @@
                         fieldToUpdate.val(newQuantity); // 새로운 수량으로 업데이트
                         // 최종 가격 업데이트
                         if(result.total_price !== undefined && result.discount_price !== undefined && result.final_price !== undefined && result.one_price !== undefined) {
-                            $('h3:contains("총 상품 가격")').text('총 상품 가격: ' + result.total_price + '원');
-                            $('h3:contains("총 할인")').text('총 할인: ' + result.discount_price + '원');
-                            $('h3:contains("최종 가격")').text('최종 가격: ' + result.final_price + '원');
+                            $('h3:contains("총 상품 금액")').text('총 상품 금액: ' + result.total_price + '원');
+                            $('h3:contains("총 할인 금액")').text('총 할인 금액: ' + result.discount_price + '원');
+                            $('h3:contains("총 결제 금액")').text('총 결제 금액: ' + result.final_price + '원');
                             $('.one-price[data-item-id="' + productId + '"]').text(result.one_price + '원');
                         }
                     } else {
