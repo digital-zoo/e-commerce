@@ -7,6 +7,8 @@ urlpatterns = [
     path('<int:category_id>', CategoryList.as_view(),name='category_list'),
     path('product_detail/<int:product_id>', product_detail, name='product_detail'),
     path('quick_checkout/', quick_checkout, name='quick_checkout'),
+    path('payment/', payment, name='payment'),
+    path('order_success/', order_success, name='order_success'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
 ]

@@ -4,7 +4,7 @@
 {% block content %}
 <h1>주문서</h1>
 <h2>배송 정보</h2>
-<form action="{% url 'customer:quick_checkout' %}" method="post">
+<form action="{% url 'customer:payment' %}" method="post">
     {% csrf_token %}
     <div class="shipping-info">
         <div class="row mb-3">
@@ -76,7 +76,7 @@
 
     <h2>총 주문 가격</h2>
     <div class="total-price">
-        <p>{{ product.price|calc_discount:product.discount_rate|floatformat:"0" }}원</p>
+        <p>{{ final_price|floatformat:"0" }}원</p>
     </div>
 
     <h2>결제 수단</h2>
@@ -91,6 +91,9 @@
     <!-- <button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제하기</button> -->
     <button type="submit" class="btn btn-primary mt-3">결제하기</button>
 </form>
+
+<button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제 테스트 버튼</button>
+
 
 <script>
     // 로그인한 구매자 정보를 기본 배송정보로 설정  
@@ -130,9 +133,8 @@
 
 <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
 <script>
-
-var IMP = window.IMP;
-    var code = "imp26236276";  // FIXME: 가맹점 식별코드
+    var IMP = window.IMP;
+    var code = "imp26236276";  // 가맹점 식별코드
     IMP.init(code);
 
 function requestPay() {
@@ -143,23 +145,23 @@ function requestPay() {
         pay_method : 'card', // 신용카드 
         merchant_uid : 'merchant_' + new Date().getTime(),
         name : '주문명:결제테스트',
-        amount : {{ final_price|floatformat:"0" }},
-        buyer_email : 'iamport@siot.do',
-        buyer_name : '구매자이름',
-        buyer_tel : '010-1234-5678',
-        buyer_addr : '서울특별시 강남구 삼성동',
-        buyer_postcode : '123-456',
-        m_redirect_url : '{% url "customer:quick_checkout" %}'
-    }, function(rsp) {
-        if ( rsp.success ) {
+        amount : 100,
+        buyer_email : '{{ user.email }}',
+        buyer_name : '{{ user.username }}',
+        buyer_tel : '010-1234-5678',//'{{ user.phone_number }}',
+        buyer_addr : '{{ user.address }}',
+        buyer_postcode : '{{ user.postal_code }}',
+        m_redirect_url : '{% url "customer:order_success" %}' // 모바일 기준
+    }, function(response) { //결제 후 호출되는 callback함수
+        if ( response.success ) {
             var msg = '결제가 완료되었습니다.';
-            msg += '고유ID : ' + rsp.imp_uid;
-            msg += '상점 거래ID : ' + rsp.merchant_uid;
-            msg += '결제 금액 : ' + rsp.paid_amount;
-            msg += '카드 승인번호 : ' + rsp.apply_num;
+            // msg += '고유ID : ' + response.imp_uid;
+            // msg += '상점 거래ID : ' + response.merchant_uid;
+            // msg += '결제 금액 : ' + response.paid_amount;
+            // msg += '카드 승인번호 : ' + response.apply_num;
         }
         else {
-            var msg = '결제에 실패하였습니다. 에러내용 : ' + rsp.error_msg
+            var msg = '결제에 실패하였습니다. 에러내용 : ' + response.error_msg
         }
         alert(msg);
     });
