@@ -6,13 +6,14 @@ from .models import Membership
 User = get_user_model()
 
 class SignupForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    phone_number = forms.CharField(required=True)
+    username = forms.CharField(required=True,label="아이디")
+    email = forms.EmailField(required=True,label="이메일")
+    phone_number = forms.CharField(required=True,label="휴대폰 번호")
     
     membership_id = forms.CharField(required=True, widget=forms.HiddenInput())  # HiddenInput 위젯을 사용합니다.
-    customer_name = forms.CharField(required=True)
-    address = forms.CharField(required=False)
-    postal_code = forms.CharField(required=False)
+    customer_name = forms.CharField(required=True,label="이름")
+    address = forms.CharField(required=False,label="주소(필수X)")
+    postal_code = forms.CharField(required=False,label="우편번호(필수X)")
 
     class Meta(UserCreationForm.Meta):
         model = User
