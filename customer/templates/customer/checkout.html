@@ -154,16 +154,25 @@ function requestPay() {
         m_redirect_url : '{% url "customer:order_success" %}' // 모바일 기준
     }, function(response) { //결제 후 호출되는 callback함수
         if ( response.success ) {
-            var msg = '결제가 완료되었습니다.';
-            // msg += '고유ID : ' + response.imp_uid;
-            // msg += '상점 거래ID : ' + response.merchant_uid;
-            // msg += '결제 금액 : ' + response.paid_amount;
-            // msg += '카드 승인번호 : ' + response.apply_num;
+            // 결제 성공 시, Ajax를 통해 응답 정보를 Django 뷰로 전송
+            $.ajax({
+                url: "{% url 'customer:payment' %}",
+                type: 'POST',
+                data: JSON.stringify(response),
+                contentType: 'application/json',
+                success: function(data) {
+                    // 처리 완료 후의 동작
+                    console.log('결제 정보 저장 완료');
+                },
+                error: function(xhr, status, error) {
+                    // 에러 처리
+                    console.error('결제 정보 저장 실패:', error);
+                }
+            });
+        } else {
+            // 결제 실패 처리
+            console.error('결제 실패:', response.error_msg);
         }
-        else {
-            var msg = '결제에 실패하였습니다. 에러내용 : ' + response.error_msg
-        }
-        alert(msg);
     });
 }
 </script>
