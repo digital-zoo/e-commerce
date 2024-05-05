@@ -3,7 +3,6 @@
 {% load custom_filters %}
 {% block content %}
 
-
 <div class="container mt-5">
     <h2>{{ user }}님의 장바구니</h2>
     <hr>
@@ -53,38 +52,35 @@
     </div>
 </div>
 
-
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 {% csrf_token %}
 <script type="text/javascript">
 
-
-    // CSRF 토큰을 JavaScript 변수로 저장합니다.
+    // CSRF 토큰을 JavaScript 변수로 저장
     var csrfToken = '{{ csrf_token }}';
 
     $(document).ready(function() {
-        $('.remove-button').click(function() {
-            // 이 버튼과 관련된 cart-item 요소를 찾아옵니다.
+        $('.remove-button').click(function() { // 삭제버튼 관련
+            // 해당 버튼과 관련된 변수 생성
             var itemElement = $(this).closest('.cart-item');
             var productId = itemElement.data('item-id');
     
             $.ajax({
-                url: '{% url "customer:delete_cart_item" user_id=user.id %}', //  서버의 URL을 적절하게 수정하세요.
-                type: 'POST', // DELETE 요청을 사용합니다.
-                dataType: 'json', // 응답으로 기대되는 데이터 유형입니다.
+                url: '{% url "customer:delete_cart_item" user_id=user.id %}', 
+                type: 'POST', // DELETE 요청을 사용
+                dataType: 'json', // 응답으로 기대되는 데이터 유형
                 data: {
                     'product_id':productId,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
                 beforeSend: function(xhr, settings) {
-                    xhr.setRequestHeader("X-CSRFToken", csrfToken); // CSRF 토큰을 요청 헤더에 추가합니다.
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken); // CSRF 토큰을 요청 헤더에 추가
                 },
                 success: function(result) {
-                    // 성공적으로 서버에서 항목을 삭제했다면, HTML에서도 해당 항목을 제거합니다.
+                    // 성공적으로 서버에서 항목을 삭제했다면, HTML에서도 해당 항목을 제거
                     if(result.success) {
                         itemElement.remove();
-                        // 여기에 총 금액을 업데이트하는 로직을 추가할 수 있습니다.
                         // 총 결제 금액 업데이트 로직 추가
                         if(result.total_price !== undefined && result.discount_price !== undefined && result.final_price !== undefined) {
                             $('h3:contains("총 상품 금액")').text('총 상품 금액: ' + result.total_price + '원');
@@ -105,10 +101,10 @@
         $('.decrement-button').click(function() {
             var itemElement = $(this).closest('.cart-item');
             var productId = itemElement.data('item-id');
-            var quantityField = itemElement.find('.quantity-field');
-            var newQuantity = parseInt(quantityField.val()) - 1;
+            var quantityField = itemElement.find('.quantity-field'); // - 버튼에 의해 변경되는 수량
+            var newQuantity = parseInt(quantityField.val()) - 1; // - 버튼 누르면 -1
 
-            // 수량이 1 이상일 때만 요청을 보냅니다.
+            // 수량이 1 이상일 때만 요청을 보냄
             if(newQuantity >= 1) {
                 updateQuantity(productId, newQuantity, quantityField);
             }
@@ -125,7 +121,7 @@
         // 수량 업데이트 함수
         function updateQuantity(productId, newQuantity, fieldToUpdate) {
             $.ajax({
-                url: '{% url "customer:update_quantity" user_id=user.id %}', // URL을 적절히 수정하세요.
+                url: '{% url "customer:update_quantity" user_id=user.id %}', 
                 type: 'POST',
                 dataType: 'json',
                 data: {
@@ -133,8 +129,8 @@
                     'quantity': newQuantity,
                     'csrfmiddlewaretoken': csrfToken
                 },
-                beforeSend: function(xhr, settings) {
-                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                beforeSend: function(xhr, settings) { // AJAX 요청을 보내기 전에 HTTP 요청 헤더에 CSRF 토큰을 추가하는 역할, 여기서 beforeSend는 AJAX 요청이 서버로 전송되기 전에 호출되는 함수
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken); // X-CSRFToken이라는 헤더에 csrfToken 값을 설정
                 },
                 success: function(result) {
                     if(result.success) {
@@ -205,9 +201,6 @@
     }
 
     .fixed-checkout {
-        /*position: fixed; /* 뷰포트에 대해 고정 */
-        /*top: 200px; /* 네비게이션 바의 높이에 따라 조정 필요 */
-        /*right: 130px; /* 오른쪽 여백 */
         width: 350px; /* 필요에 따라 조정 */
         background-color: white; /* 배경색 */
         padding: 10px; /* 패딩 */
@@ -217,23 +210,3 @@
 </style>
 
 {% endblock %}
-
-
-<!-- {% if object %}
-    <ul>
-        {% for item in object %}
-        <li>
-            <img src="{{ item.product.image_url }}" alt="{{ item.product.title }}" style="width:100px; height:auto;">
-            <h3>{{ item.product.title }}</h3>
-            <p>{{ item.product.description }}</p>
-            <p>가격: {{ item.product.price }}원</p>
-            <p>수량: {{ item.quantity }}</p>
-            <button onclick="location.href=#">+</button>
-            <button onclick="location.href=#">-</button>
-            <button onclick="location.href=#">삭제</button>
-        </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <h2>장바구니가 비어있습니다.</h2>
-{% endif %} -->

@@ -1,14 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
-
-
 # 멤버쉽 테이블
 class Membership(models.Model):
     membership_id = models.IntegerField(primary_key=True)
     grade = models.CharField(max_length=255,unique=True)
     member_discount_rate = models.DecimalField(max_digits=3, decimal_places=2)    
-
 
 ###############
 # 유저 테이블 커스터 마이징을 위한 3단계
@@ -87,13 +84,14 @@ class Cart(models.Model):
     cart_id = models.AutoField(primary_key=True)  # 카트ID는 자동으로 생성되는 순차적인 정수
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)  # Customer 테이블과 외래키 관계, 
 
+# 카트 아이템 테이블
 class CartItem(models.Model):
     cartitem_id = models.AutoField(primary_key=True)  # 카트아이템ID는 자동으로 생성되는 순차적인 정수
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)  # 카트와의 외래키 관계, 카트가 삭제되면 관련된 카트아이템도 삭제
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)  # product와 외래키 관계, 
     quantity = models.IntegerField()  # 수량은 정수형
 
-    def get_total_price(self):
+    def get_total_price(self): # 한 유저의 카트에 담긴 총 금액을 출력하기 위한 메서드
         return int(self.quantity * self.product.price * (1 - (self.product.discount_rate)))
     
 class Order(models.Model):

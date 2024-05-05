@@ -17,18 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from config.views import *
-
 from config.views import UserCreateView, UserCreateDoneTV # 가입처리를 수행하는 뷰
 
 app_name = "config"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # 홈화면 
-    path('', HomeView.as_view(),name='home'),
+    path('', HomeView.as_view(),name='home'), # 홈화면
     path('customer/', include('customer.urls')),
-    
     path('accounts/', include('django.contrib.auth.urls')), # 장고의 인증 URLconf를 가져와서 사용
     path('accounts/register/', UserCreateView.as_view(), name='register'), # 계정 생성 URl, 인증 관련 URL 모두 accounts/로 시작하도록 통일
-    path('accounts/register/done/', UserCreateDoneTV.as_view(), name='register_done'), # 계정 생성 완료 메세지를 보여주기 위한 
+    path('accounts/register/done/', UserCreateDoneTV.as_view(), name='register_done'), # 계정 생성 완료 메세지를 보여주기 위한 URL
 ]
