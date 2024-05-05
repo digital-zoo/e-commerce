@@ -9,5 +9,5 @@ urlpatterns = [
     path('mypage/', seller_mypage_view, name='seller_mypage'),    
     path('mypage/change_password', seller_change_password_view, name='seller_change_password'),    
     path('mypage/profile_edit/', seller_profile_edit_view, name='seller_profile_edit'),
-    path('mypage/delete_seller/', delete_seller_view, name='delete_seller_view'), 
+    path('mypage/delete_seller/', delete_seller_view, name='delete_seller'), 
 ]
