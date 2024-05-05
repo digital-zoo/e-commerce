@@ -146,3 +146,26 @@ def get_cart_summary(request):
         'discount_price': discount_price,
         'final_price': final_price
     })
+
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate,login,logout
+from django.http import HttpResponse
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)            
+            return redirect('home') # 로그인 성공 후 리다이렉트할 페이지
+        else:
+            # 실패한 경우, 로그인 페이지에 에러 메시지를 표시할 수 있습니다.
+            return HttpResponse('로그인 실패. 다시 시도해주세요.')
+    else:
+        # GET 요청일 경우 로그인 폼을 보여주는 페이지를 렌더링
+        return render(request,"customer/login.html")
+
+def logout_view(request):
+    logout(request)
+    return redirect("customer:login")
