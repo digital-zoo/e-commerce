@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <h2>개인정보 수정</h2>
+    <form method="post">
+        {% csrf_token %}
+        아이디: <input type="text" name="username" value="{{ user.username }}" disabled><br>
+        회사명: <input type="text" name="company_name" value="{{ company_name }}"><br>
+        Email: <input type="email" name="email" value="{{ user.email }}"><br>
+        휴대폰 번호:<input type="text" name="phone_number" value="{{ user.phone_number }}"><br>
+        회사 연락처:<input type="text" name="business_contact" value="{{ business_contact }}"><br>
+        사업자등록번호:<input type="text" name="registration_number" value="{{ registration_number }}"><br>
+        <button type="submit">수정하기</button>
+    </form>
+    </div>      
+{% else %}
+    <p>판매자 개인정보수정은 로그인한 후 사용할 수 있습니다.</p>
+{% endif %}
+{% endblock %}

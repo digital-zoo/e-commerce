@@ -3,11 +3,15 @@ from .models import Seller
 
 class SellerAuthenticationBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        try:            
-            user = Seller.objects.get(username=username)
-            # 비밀번호 검증
-            if user.check_password(password):
-                return user
+        try:
+            seller = Seller.objects.get(username=username)
+            if seller.check_password(password):
+                return seller
         except Seller.DoesNotExist:
-            # 사용자가 존재하지 않으면 None 반환
+            return None
+
+    def get_user(self, user_id):
+        try:
+            return Seller.objects.get(pk=user_id)
+        except Seller.DoesNotExist:
             return None
