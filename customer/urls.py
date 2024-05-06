@@ -11,4 +11,5 @@ urlpatterns = [
     path('order_success/', order_success, name='order_success'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
+    path('payments/', PaymentAPIView.as_view(), name='payment-list'),
 ]

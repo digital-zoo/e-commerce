@@ -112,6 +112,11 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return str(self.orderitem_id)
+    
+class Payment(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    final_price = models.IntegerField(default=0)
+
 
 class Like(models.Model):
     like_id = models.AutoField(primary_key=True)

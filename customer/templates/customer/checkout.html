@@ -4,7 +4,7 @@
 {% block content %}
 <h1>주문서</h1>
 <h2>배송 정보</h2>
-<form action="{% url 'customer:payment' %}" method="post">
+<form action="{% url 'customer:payment-list' %}" method="post">
     {% csrf_token %}
     <div class="shipping-info">
         <div class="row mb-3">
@@ -92,7 +92,7 @@
     <button type="submit" class="btn btn-primary mt-3">결제하기</button>
 </form>
 
-<button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제 테스트 버튼</button>
+<!-- <button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제 테스트 버튼</button> -->
 
 
 <script>
