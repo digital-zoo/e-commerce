@@ -39,13 +39,15 @@ class CategoryList(ListView):
     
 
 def product_detail(request, product_id):
-    user = request.user
+    #user = request.user
     product = Product.objects.get(product_id=product_id)
+    product_imgs = ProductImage.objects.filter(product = product)
     #cart, _ = Cart.objects.get_or_create(customer=user)
     #cartitem, _ = CartItem.objects.get_or_create(cart=cart, product=product)
     #cartitem_total_quantity = user.cartitem_set.aggregate(totalcount=Sum('quantity'))['totalcount']
     context = {
-        'object':product,
+        'product':product,
+        'product_imgs': product_imgs,
         #'cartitemQuantity':cartitem.quantity,
         #'totalCartitemQuantity':cartitem_total_quantity
     }
