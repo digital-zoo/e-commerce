@@ -101,23 +101,21 @@ def payment(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
         print("post 호출됨")
 
-        # 선택한 상품 불러오기
+        # 선택한 상품 id 불러오기
         product_id = request.POST.get('product_id')
         # 선택한 상품 수량 불러오기
         quantity = request.POST.get('quantity')
 
         # 제품 재고 감소 # 동시성처리
         product_udt = Product.objects.select_for_update(nowait=False).get(product_id=product_id)
-        if product_udt.stock >= 100: # 재고가 충분할 때 정상처리
-            product_udt.stock -= quantity
+        if product_udt.stock >= int(quantity): # 재고가 충분할 때 정상처리
+            product_udt.stock -= int(quantity)
             product_udt.save()
         else:
             return JsonResponse({'error': '재고부족'}, status=400) # 롤백, 종료
         
         # 구매자 정보 불러오기
         user = request.user
-        # 선택한 상품 수량 불러오기
-        # quantity = request.POST.get('quantity')
         # 선택한 상품 불러오기
         product = Product.objects.get(product_id=product_id)
         # 배송 정보 불러오기
@@ -150,10 +148,11 @@ def payment(request):
                     product=product,
                     quantity=quantity
                 )
-        Payment.objects.create(
-                    order = order,
-                    final_price = final_price,
-                )       
+        # DB 백업 -> DB에 Payment 테이블 생성 후 사용가능
+        # Payment.objects.create(
+        #             order = order,
+        #             final_price = final_price,
+        #         )       
 
     # 트랜잭션 시작
     # 주문서 생성 및 주문 메뉴 생성
@@ -164,17 +163,6 @@ def payment(request):
     # 트랜잭션 실패 시 롤백        
         return JsonResponse({'message': 'Order created successfully'}, status=200)
 
-# def decrease_stock(product_id, quantity):
-#     try:
-#         product = Product.objects.select_for_update(nowait=False).get(product_id=product_id)
-#         if product.stock >= quantity: # 재고가 충분할 때 정상처리
-#             product.stock -= quantity
-#             product.save()
-#         else:
-#             raise Exception("재고가 부족합니다")
-#     except Product.DoesNotExist:
-#         raise Exception("해당 상품이 존재하지 않습니다")
-    
 def order_success(request):
         return render(request, 'customer/order_confirmation.html')
 
