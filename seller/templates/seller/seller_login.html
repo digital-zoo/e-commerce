@@ -1,17 +1,53 @@
-<br>
+{% extends 'base.html' %}
+{% block content %}
 {%if user.is_authenticated %}
-    판매자 로그인 성공
-    판매자 {{user.username}}님 환영합니다.
-    <a href="{% url 'seller:seller_logout' %}">로그아웃</a>
+    <br>
+    <br>    
+    <h3>현재 접속 중인 판매자 아이디는  {{user.username}} 입니다.</h3>
 {%else%}
-<form action="" method="post">
+
+<!-- 메시지를 표시할 부분 시작 -->
+{% if messages %}
+    {% for message in messages %}
+        <div hidden id="popup-message" data-message="{{ message }}" data-tag="{{ message.tags }}"></div>
+    {% endfor %}
+{% endif %}
+<br>
+<h1 style="text-align: center;">판매자 로그인</h1>
+<br>
+<form action="" method="post" class="mt-3">
     {% csrf_token %}
-    <label for="username">판매자 이름:</label>
-    <input type="text" name="username" id="username" required><br>
-    <label for="password">비밀번호:</label>
-    <input type="password" name="password" id="password" required><br>
-    <button type="submit">로그인</button>    
+    <div class="mb-2 d-grid gap-2 col-md-4 mx-auto">
+        <label for="username" class="form-label"></label>
+        <input type="text" name="username" id="username" class="form-control" placeholder="아이디" required>
+    </div>
+    <div class="mb-5 d-grid gap-2 col-md-4 mx-auto"> <!-- 여기에 mb-5 클래스를 사용하여 빈 공간의 크기를 늘렸습니다 -->
+        <label for="password" class="form-label"></label>
+        <input type="password" name="password" id="password" class="form-control" placeholder="비밀번호" required>
+    </div>
+    <div class="d-grid gap-2 col-md-4 mx-auto">
+        <button type="submit" class="btn btn-primary mb-2">로그인</button>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-2">
+            <hr class="my-1" style="width: 100%; color: #6c757d; height: 1px; background-color: #6c757d;">
+        </div>
+        <a href="{% url 'seller:seller_signup' %}" class="btn btn-outline-secondary">판매자 회원가입</a>
+    </div>
 </form>
-<a href="{% url 'seller:seller_signup' %}">판매자 회원가입</a>
+
 
 {% endif %}
+
+<!-- JavaScript 코드 시작 -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('#popup-message');
+        messages.forEach(function(messageDiv) {
+            const message = messageDiv.getAttribute('data-message');
+            const tag = messageDiv.getAttribute('data-tag');        
+            alert(`${tag}: ${message}`);
+        });
+    });
+    </script>
+    <!-- JavaScript 코드 끝 -->
+    
+{% endblock %}

@@ -9,51 +9,51 @@
         <form method="post">
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-6 border-right" style="background-color: #007BFF; color: white;">
-                    <label for="username" class="text-black">아이디</label><br>
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="username">아이디</label><br>
                 </div>
                 <div class="col-md-6">
-                    <input type="text" id="username" name="username" value="{{ user.username }}" class="form-control" style="width: 66%;" disabled><br>
+                    <input type="text" id="username" name="username" value="{{ user.username }}" class="form-control" disabled><br>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 border-right bg-secondary">
-                    <label for="customer_name" class="text-black">이름</label><br>
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="customer_name">이름</label><br>
                 </div>
                 <div class="col-md-6">
-                    <input type="text" id="customer_name" name="customer_name" value="{{ customer_name }}" class="form-control" style="width: 66%;"><br>
+                    <input type="text" id="customer_name" name="customer_name" value="{{ customer_name }}" class="form-control"><br>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 border-right" style="background-color: #007BFF; color: white;">
-                    <label for="email" class="text-black">이메일</label><br>
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="email">이메일</label><br>
                 </div>
                 <div class="col-md-6">
-                    <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control" style="width: 66%;"><br>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control"><br>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 border-right bg-secondary">
-                    <label for="phone_number" class="text-black">휴대폰 번호</label><br>
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="phone_number">휴대폰 번호</label><br>
                 </div>
                 <div class="col-md-6">
-                    <input type="text" id="phone_number" name="phone_number" value="{{ user.phone_number }}" class="form-control" style="width: 66%;"><br>
+                    <input type="text" id="phone_number" name="phone_number" value="{{ user.phone_number }}" class="form-control"><br>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 border-right" style="background-color: #007BFF; color: white;">
-                    <label for="address" class="text-black">주소</label><br>
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="address">주소</label><br>
                 </div>
                 <div class="col-md-6">
-                    <input type="text" id="address" name="address" value="{{ address }}" class="form-control" style="width: 66%;"><br>
+                    <input type="text" id="address" name="address" value="{{ address }}" class="form-control"><br>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6 border-right bg-secondary">
-                    <label for="postal_code" class="text-black">우편번호</label><br>
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="postal_code">우편번호</label><br>
                 </div>
                 <div class="col-md-6">
-                    <input type="text" id="postal_code" name="postal_code" value="{{ postal_code }}" class="form-control" style="width: 66%;"><br>
+                    <input type="text" id="postal_code" name="postal_code" value="{{ postal_code }}" class="form-control"><br>
                 </div>
             </div>
             <br>
@@ -61,7 +61,6 @@
         </form>
     </div>      
 {% else %}
-
     <p>개인정보수정은 로그인한 후 사용할 수 있습니다.</p>
 {% endif %}
 {% endblock %}
