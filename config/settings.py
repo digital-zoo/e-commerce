@@ -4,8 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 db_password=os.getenv("MY_DB_PASSWORD")
-imp_key=os.getenv("MY_IMP_KEY")
-imp_secret=os.getenv("MY_IMP_SECRET")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -129,8 +127,3 @@ AUTH_USER_MODEL = 'customer.Customer'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-IAMPORT = {
-    'IMP_KEY': 'imp_key',
-    'IMP_SECRET': 'imp_secret',
-}

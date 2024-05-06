@@ -9,7 +9,7 @@ urlpatterns = [
     path('quick_checkout/', quick_checkout, name='quick_checkout'),
     path('payment/', payment, name='payment'),
     path('order_success/', order_success, name='order_success'),
+    path('order_fail/', order_fail, name='order_fail'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
-    path('payments/', PaymentAPIView.as_view(), name='payment-list'),
 ]

@@ -4,8 +4,6 @@
 {% block content %}
 <h1>주문서</h1>
 <h2>배송 정보</h2>
-<form action="{% url 'customer:payment-list' %}" method="post">
-    {% csrf_token %}
     <div class="shipping-info">
         <div class="row mb-3">
             <div class="col-sm-6">
@@ -51,8 +49,6 @@
         </div>
     </div>
 
-    <input type="hidden" name="product_id" value="{{product.product_id}}">
-    <input type="hidden" name="quantity" value="{{quantity}}">
     <div class="card mb-3">
         <div class="card-body">
             <h2 class="card-title">주문 상품</h2>
@@ -82,18 +78,13 @@
     <h2>결제 수단</h2>
     <div class="payment-method">
         <select id="payment_method" name="payment_method" class="form-select" required>
-            <option value="credit_card">신용카드</option>
-            <option value="bank_transfer">계좌이체</option>
-            <option value="cash">현금결제</option>
+            <option value="card">카드결제</option>
+            <!-- <option value="bank_transfer">계좌이체</option>
+            <option value="cash">현금결제</option> -->
         </select>
     </div>
 
-    <!-- <button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제하기</button> -->
-    <button type="submit" class="btn btn-primary mt-3">결제하기</button>
-</form>
-
-<!-- <button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제 테스트 버튼</button> -->
-
+    <button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제하기</button>
 
 <script>
     // 로그인한 구매자 정보를 기본 배송정보로 설정  
@@ -131,6 +122,8 @@
     });
 </script>
 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
 <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
 <script>
     var IMP = window.IMP;
@@ -142,31 +135,45 @@ function requestPay() {
     IMP.request_pay({
         // name과 amount만 있어도 결제 진행가능
         pg : 'html5_inicis', // 이니시스 결제창 일반/정기결제
-        pay_method : 'card', // 신용카드 
-        merchant_uid : 'merchant_' + new Date().getTime(),
-        name : '주문명:결제테스트',
-        amount : 100,
+        pay_method : $('#payment_method').val(), // 신용카드 
+        merchant_uid : 'merchant_' + new Date().getTime(), 
+        name : '{{ product.product_name }}',
+        amount : 100, // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
         buyer_email : '{{ user.email }}',
         buyer_name : '{{ user.username }}',
-        buyer_tel : '010-1234-5678',//'{{ user.phone_number }}',
+        buyer_tel : '{{ user.phone_number }}',
         buyer_addr : '{{ user.address }}',
         buyer_postcode : '{{ user.postal_code }}',
         m_redirect_url : '{% url "customer:order_success" %}' // 모바일 기준
     }, function(response) { //결제 후 호출되는 callback함수
         if ( response.success ) {
-            // 결제 성공 시, Ajax를 통해 응답 정보를 Django 뷰로 전송
+            // 결제 성공 시, Ajax를 통해 응답 정보를 view로 전송
             $.ajax({
                 url: "{% url 'customer:payment' %}",
-                type: 'POST',
-                data: JSON.stringify(response),
-                contentType: 'application/json',
+                type: "POST",
+                dataType: "json",
+                data : {
+                    csrfmiddlewaretoken : window.CSRF_TOKEN, // CSRF 토큰 추가
+                    postal_code: $('#postal_code').val(), // 우편번호
+                    shipping_address: $('#shipping_address').val(), // 배송 주소
+                    shipping_address_detail: $('#shipping_address_detail').val(), // 상세 주소
+                    recipient: $('#recipient').val(), // 수령인
+                    recipient_phone_number: $('#recipient_phone_number').val(), // 수령인 전화번호
+                    product_id: '{{ product.product_id }}', // 상품 ID
+                    quantity: '{{ quantity }}', // 수량
+                    final_price: '{{ final_price }}', // 총 주문 가격 -> 현재 DB에 저장되는 값
+                    payment_method: $('#payment_method').val(), // 결제 수단
+                    paid_amount: response.paid_amount, // 결제 금액 -> 임시 금액 100원/ test완료 이후 DB에 저장값으로 지정될 값
+                },
                 success: function(data) {
                     // 처리 완료 후의 동작
                     console.log('결제 정보 저장 완료');
+                    window.location.href = "{% url 'customer:order_success' %}"; // 리디렉션
                 },
                 error: function(xhr, status, error) {
                     // 에러 처리
                     console.error('결제 정보 저장 실패:', error);
+                    window.location.href = "{% url 'customer:order_fail' %}"; // 리디렉션
                 }
             });
         } else {
