@@ -6,13 +6,12 @@ from django.http import HttpResponse
 from .forms import SignupForm
 from django.views import View
 from .models import Customer,Membership
-# from django.http import HttpResponseRedirect
-# from django.urls import reverse
-from django.contrib import messages
+
 from django.db.models import Q
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 # Create your views here.
 class CategoryList(ListView):
@@ -48,14 +47,15 @@ def login_view(request):
             return redirect('home')
         else:
             # 실패한 경우, 로그인 페이지에 에러 메시지를 표시할 수 있습니다.
-            return HttpResponse('로그인 실패. 다시 시도해주세요.')
+            messages.error(request, '로그인 실패. 다시 시도해주세요.')
+            return redirect('customer:login')
     else:
         # GET 요청일 경우 로그인 폼을 보여주는 페이지를 렌더링
         return render(request,"customer/login.html")
 
 def logout_view(request):
     logout(request)
-    return redirect("customer:login")
+    return redirect("home")
 
 class SignupView(View):
     form_class = SignupForm
@@ -126,7 +126,7 @@ def profile_edit_view(request):
                         
             'customer_name': customer.customer_name if customer else "비어있음",
             'address':customer.address if customer else "비어있음",
-            'postal_code':customer.postal_code if customer else "비어있음",        
+            'postal_code':customer.postal_code if customer else "비어있음",                    
         }
         
         return render(request, 'customer/profile_edit.html', context)

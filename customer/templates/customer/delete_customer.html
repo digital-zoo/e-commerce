@@ -1,12 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if user.is_authenticated %}
-    <p>회원탈퇴를 원하시면 "회원탈퇴"를 입력하고 제출 버튼을 눌러주세요.</p>
+<br>
+<h2>회원탈퇴</h2>
+<br>
+{% if user.is_authenticated %}    
     <form method="post">
         {% csrf_token %}
-        <input type="text" name="delete_customer?" value=""><br>
-        <button type="submit">제출</button>
+        <h5>회원탈퇴를 원하시면 아래 칸에 "회원탈퇴"를 입력하고 제출 버튼을 눌러주세요.</h5>
+        <br>
+        <input type="text" name="delete_customer?" placeholder='회원탈퇴' value=""> <!-- placeholder 추가 -->
+        <button type="submit" class="btn btn-primary mb-2">제출</button>
     </form>
 {% else %}
     <p>회원탈퇴는 로그인한 후 할 수 있습니다.</p>
