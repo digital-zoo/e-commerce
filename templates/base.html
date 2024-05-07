@@ -20,7 +20,7 @@
       </ul>
       <ul class="nav">
         {% if user.is_active %}
-        {% comment %}
+        <!-- {% comment %} -->
         <!-- <li class="nav-item"><a href="{% url 'logout' %}" class="nav-link link-body-emphasis px-2">로그아웃</a></li> -->
         <!-- 장바구니 기능 구현 위한 로그인 관련 코드  -->
         <!-- <form action="{% url 'logout' %}" method="post">
@@ -31,12 +31,13 @@
         {% else %}
         <li class="nav-item"><a href="{% url 'login' %}" class="nav-link link-body-emphasis px-2">로그인</a></li>
         <li class="nav-item"><a href="{% url 'register' %}" class="nav-link link-body-emphasis px-2">회원가입</a></li> -->
-        {% endcomment %}
+        <!-- {% endcomment %} -->
         <li class="nav-item"><a href="{% url 'customer:logout' %}" class="nav-link link-body-emphasis px-2">로그아웃</a></li>
-        <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">비밀번호 변경</a></li>
+        <li class="nav-item"><a href="{% url 'customer:change_password' %}" class="nav-link link-body-emphasis px-2">비밀번호 변경</a></li>
         {% else %}
         <li class="nav-item"><a href="{% url 'customer:login' %}" class="nav-link link-body-emphasis px-2">로그인</a></li>
-        <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">회원가입</a></li>
+        <li class="nav-item"><a href="{% url 'customer:signup' %}" class="nav-link link-body-emphasis px-2">회원가입</a></li>
+        <li class="nav-item"><a href="{% url 'seller:seller_login' %}" class="nav-link link-body-emphasis px-2">판매자</a></li> 
         {% endif %}
       </ul>
     </div>
@@ -56,7 +57,7 @@
         
    
         <div class="d-flex flex-wrap mx-2"> 
-            <a href="#" class="link-body-emphasis text-decoration-none mx-2">마이쿠팡</a> 
+            <a href="{% url 'customer:mypage' %}" class="link-body-emphasis text-decoration-none mx-2">마이쿠팡(구매자)</a> 
             {% if user.is_active %}
             <a href="{% url 'customer:cart' user.id %}" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
             {% else %}

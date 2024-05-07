@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-3">
+    {% if user.is_authenticated %}
+    <div class="row">
+        <!-- 좌측 사이드바 -->
+        <div class="col-md-3">
+            <!-- MY쿠팡 타이틀 박스 -->
+            <div class="bg-primary text-white p-3 mb-3" style="font-size: 1.5rem;"> <!-- 주석: MY 쿠팡 타이틀 박스를 1.5배 크기로 수정 -->
+                MY쿠팡
+            </div>
+            <!-- 하단 박스 -->
+            <div class="border border-secondary p-3 bg-white mb-3">
+                <h5>MY 쇼핑</h5>
+                
+            </div>
+            <div class="border border-secondary p-3 bg-white mb-3">
+                <h5>MY 혜택</h5>
+                
+            </div>
+            <div class="border border-secondary p-3 bg-white mb-3">
+                <h5>MY 활동</h5>
+                
+            </div>
+            <div class="border border-secondary p-3 bg-white mb-3">
+                <h5>MY 정보</h5>
+                <a href="{%url 'customer:change_password'%}" class="d-block">비밀번호 변경</a>
+                <a href="{%url 'customer:profile_edit'%}" class="d-block">개인정보 수정</a>
+                <a href="{%url 'customer:delete_customer'%}" class="d-block">회원탈퇴</a>
+                <!-- 추가적인 링크나 정보를 넣을 수 있습니다. -->
+            </div>
+        </div>
+        <!-- 우측 주요 기능 공간 -->
+        <div class="col-md-9">
+            <!-- 여기에 주요 내용을 추가합니다. -->
+        </div>
+    </div>
+    {% else %}
+    <p>마이페이지는 로그인한 후 사용할 수 있습니다.</p>
+    {% endif %}
+</div>
+{% endblock %}

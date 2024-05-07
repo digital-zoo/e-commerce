@@ -14,4 +14,9 @@ urlpatterns = [
     path('cart/get_cart_summary/<int:user_id>/', views.get_cart_summary, name='get_cart_summary'), # 수량에 따른 가격 변경 처리 url
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
+    path('signup/', SignupView.as_view(), name='signup'),
+    path('mypage/', mypage_view, name='mypage'),    
+    path('mypage/change_password', change_password_view, name='change_password'),    
+    path('mypage/profile_edit/', profile_edit_view, name='profile_edit'),
+    path('mypage/delete_customer/', delete_customer_view, name='delete_customer'),   
 ]

@@ -28,4 +28,5 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')), # 장고의 인증 URLconf를 가져와서 사용
     path('accounts/register/', UserCreateView.as_view(), name='register'), # 계정 생성 URl, 인증 관련 URL 모두 accounts/로 시작하도록 통일
     path('accounts/register/done/', UserCreateDoneTV.as_view(), name='register_done'), # 계정 생성 완료 메세지를 보여주기 위한 URL
+    path('seller/', include('seller.urls')),
 ]
