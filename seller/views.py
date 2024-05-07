@@ -80,6 +80,7 @@ def add_product(request):
 def edit_product(request, product_id):
     try:
         product = Product.objects.get(product_id=product_id)
+        existing_images = ProductImage.objects.filter(product=product)
     except Product.DoesNotExist:
         messages.error(request, "수정하려는 상품이 존재하지 않습니다.")
         return redirect('seller:product_list')
@@ -104,13 +105,48 @@ def edit_product(request, product_id):
         product.is_option = is_option
         product.save()
 
+        # 이미지 처리
+        uploaded_files = request.FILES.getlist('files')
+
+        # 삭제할 이미지 목록 (POST 파라미터에서 가져옴)
+        delete_image_ids = request.POST.getlist('delete_image_ids')
+
+        # 기존 이미지 삭제
+        for delete_image_id in delete_image_ids:
+            try:
+                delete_image = ProductImage.objects.get(productimage_id=delete_image_id)
+                storage = FileSystemStorage()
+                storage.delete(delete_image.image_url)  # 이미지 파일 삭제
+                delete_image.delete()
+            except ProductImage.DoesNotExist:
+                pass       
+
+        # 새로운 이미지 저장
+        # fs=FileSystemStorage()
+        # for uploaded_file in uploaded_files:
+        #     filename = fs.save(uploaded_file.name, uploaded_file)
+        #     image_url = fs.url(filename)
+        #     ProductImage.objects.create(product=product, image_url=image_url)
+
+            
+
         messages.success(request, "상품 정보가 수정되었습니다.")
         return redirect('seller:seller_index')
 
     context = {
         'product': product,
+        'existing_images': existing_images,  # 템플릿에 기존 이미지 정보 전달
     }
     return render(request, 'seller/seller_edit_product.html', context)
+        
+
+    #     messages.success(request, "상품 정보가 수정되었습니다.")
+    #     return redirect('seller:seller_index')
+
+    # context = {
+    #     'product': product,
+    # }
+    # return render(request, 'seller/seller_edit_product.html', context)
 
 
 def order_manage(request):
