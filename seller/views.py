@@ -4,9 +4,8 @@ from django.core.files.storage import FileSystemStorage
 #from django.contrib.auth.models import User
 from django.contrib import messages
 from customer.models import  Order, OrderItem
-
-
-
+from config import settings
+import os
 
 # Create your views here.
 def seller_index(request):
@@ -77,6 +76,17 @@ def add_product(request):
         
         return redirect('seller:seller_index')  
     
+
+def order_manage(request):
+
+    seller_id = request.GET.get('seller')  
+    seller = Seller.objects.get(id=8)   # 로그인 기능 구현시 수정 필요
+    #seller = Seller.objects.get(user=request.user)  
+    sold_products = Order.objects.filter(orderitem__product__seller=seller).distinct()  
+    context = {'sold_products': sold_products}
+    # 주문상태 변경 필요
+    return render(request, 'seller/seller_order_manage.html', context)
+
 def edit_product(request, product_id):
     try:
         product = Product.objects.get(product_id=product_id)
@@ -111,51 +121,43 @@ def edit_product(request, product_id):
         # 삭제할 이미지 목록 (POST 파라미터에서 가져옴)
         delete_image_ids = request.POST.getlist('delete_image_ids')
 
-        # 기존 이미지 삭제
-        for delete_image_id in delete_image_ids:
-            try:
-                delete_image = ProductImage.objects.get(productimage_id=delete_image_id)
-                storage = FileSystemStorage()
-                storage.delete(delete_image.image_url)  # 이미지 파일 삭제
-                delete_image.delete()
-            except ProductImage.DoesNotExist:
-                pass       
+        if delete_image_ids and any(delete_image_ids):
+            # 기존 이미지 삭제
+            for delete_image_id in delete_image_ids:
+                try:
+                    if delete_image_id == '':
+                        break
+                    delete_image = ProductImage.objects.get(productimage_id=delete_image_id)
+                    fs = FileSystemStorage()
+                    base_dir = settings.MEDIA_ROOT                    
+                    #delete_url = os.path.join(base_dir, delete_image.image_url)
+                    delete_url = os.path.join(base_dir, delete_image.image_url.lstrip('/media/'))
+  # 경로를 올바르게 결합
+                    fs.delete(delete_url)  # 이미지 파일 삭제
+                    delete_image.delete()
+                except ProductImage.DoesNotExist:
+                    pass  # 삭제하려는 이미지가 없는 경우 에러 처리 무시
 
         # 새로운 이미지 저장
-        # fs=FileSystemStorage()
-        # for uploaded_file in uploaded_files:
-        #     filename = fs.save(uploaded_file.name, uploaded_file)
-        #     image_url = fs.url(filename)
-        #     ProductImage.objects.create(product=product, image_url=image_url)
+        
+        if uploaded_files:
+            fs=FileSystemStorage()
+            image_urls = []
+            for uploaded_file in uploaded_files:
+                filename = fs.save(uploaded_file.name, uploaded_file)
+                image_url = fs.url(filename)
+                image_urls.append(image_url)
 
-            
+            for image_url in image_urls:
+                ProductImage.objects.create(product=product, image_url=image_url)
 
-        messages.success(request, "상품 정보가 수정되었습니다.")
-        return redirect('seller:seller_index')
+            messages.success(request, "상품 정보가 수정되었습니다.")
+            return redirect('seller:seller_index')
+        
 
     context = {
         'product': product,
         'existing_images': existing_images,  # 템플릿에 기존 이미지 정보 전달
     }
     return render(request, 'seller/seller_edit_product.html', context)
-        
-
-    #     messages.success(request, "상품 정보가 수정되었습니다.")
-    #     return redirect('seller:seller_index')
-
-    # context = {
-    #     'product': product,
-    # }
-    # return render(request, 'seller/seller_edit_product.html', context)
-
-
-def order_manage(request):
-
-    seller_id = request.GET.get('seller')  
-    seller = Seller.objects.get(id=8)   # 로그인 기능 구현시 수정 필요
-    #seller = Seller.objects.get(user=request.user)  
-    sold_products = Order.objects.filter(orderitem__product__seller=seller).distinct()  
-    context = {'sold_products': sold_products}
-    # 주문상태 변경 필요
-    return render(request, 'seller/seller_order_manage.html', context)
 

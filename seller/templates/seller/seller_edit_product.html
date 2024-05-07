@@ -42,6 +42,11 @@
     <input type="file" class="form-control" id="images" name="images" multiple>
     <small class="text-muted">기존 이미지는 수정 페이지에서 변경할 수 없습니다. 새로운 이미지를 추가하려면 여기에 업로드하세요.</small>
   </div>
+  <div>
+    <label class="form-label">사진을 올려주세요</label>
+    <input type="file" name="files" multiple class="form-control" id="files">
+    <div id="image-preview"></div>
+</div>
 
 <form method="post" enctype="multipart/form-data">
   {% csrf_token %}
@@ -72,3 +77,27 @@
     });
   });
 </script>
+<script>
+  const fileInput = document.getElementById('files');
+  const imagePreview = document.getElementById('image-preview');
+  
+  fileInput.addEventListener('change', function() {
+    const files = this.files;
+  
+    // 미리보기 이미지를 모두 제거합니다.
+    imagePreview.innerHTML = '';
+  
+    // 선택된 각 파일을 처리합니다.
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = '100px'; // 원하는 너비 설정
+        img.style.height = 'auto'; // 높이는 자동 조정
+        imagePreview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  </script>
