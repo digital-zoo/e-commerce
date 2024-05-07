@@ -61,7 +61,7 @@
             <!-- <h3>총 상품 금액 : {{ total_price }}원</h3>
             <h3>총 할인 금액 : {{ discount_price|floatformat:"0" }}원</h3>
             <h3>총 결제 금액 : {{ final_price|floatformat:"0" }}원</h3> -->
-            <button class="buy-button" onclick="location.href='#'">구매하기</button>
+            <a href="{% url 'customer:cart_checkout' %}"><button class="buy-button">구매하기</button></a>
         </div>
     </div>
 </div>
