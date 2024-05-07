@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<br>
+<h2>판매자 탈퇴</h2>
+<br>
+{% if user.is_authenticated %}
+<h5>판매자 탈퇴를 원하시면 "판매자탈퇴"를 입력하고 제출 버튼을 눌러주세요.</h5>
+<br>
+    <form method="post">
+        {% csrf_token %}        
+        <input type="text" name="delete_seller?" placeholder='판매자탈퇴' value=""> <!-- placeholder 추가 -->
+        <button type="submit" class="btn btn-primary mb-2">제출</button>
+    </form>
+{% else %}
+    <p>판매자 탈퇴는 로그인 후 할 수 있습니다.</p>
+{% endif %}
+{% endblock %}
