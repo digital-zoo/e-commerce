@@ -349,7 +349,7 @@ def profile_edit_view(request):
         customer.save()
         
         # messages.success(request, "프로필이 성공적으로 업데이트되었습니다.")
-        return redirect('customer:profile_edit')
+        return redirect('customer:mypage')
     else:
         if not request.user.is_authenticated:
             # 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
@@ -399,7 +399,7 @@ def delete_customer_view(request):
         user = request.user
         user.delete()
         # messages.success(request, '계정이 성공적으로 삭제되었습니다.')
-        return redirect('home')
+        return redirect('customer:login')
     else:
         # messages.error(request, '계정이 삭제가 실패했습니다.')
         return render(request, 'customer/delete_customer.html')

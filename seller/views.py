@@ -255,7 +255,7 @@ def seller_profile_edit_view(request):
         seller.save()
         
         # messages.success(request, "프로필이 성공적으로 업데이트되었습니다.")
-        return redirect('seller:seller_profile_edit')
+        return redirect('seller:seller_mypage')
     else:
         if not request.user.is_authenticated:
             # 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
