@@ -13,6 +13,8 @@ class Category(models.Model):
     category_name = models.CharField(max_length=100)
     parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
 
+    def __str__(self):
+        return self.category_name
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
@@ -26,10 +28,13 @@ class Product(models.Model):
     discount_rate = models.DecimalField(max_digits=3, decimal_places=2)
     is_option = models.BooleanField(default=True)
 
+    def category_name(self):
+        return self.category.category_name
+
 class ProductImage(models.Model):
     productimage_id = models.AutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image_url=models.URLField()
  
     def __str__(self):
-        return f"Image for {self.product.name} at {self.image_url}"
+        return f"Image for {self.product.product_name} at {self.image_url}"

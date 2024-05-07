@@ -35,6 +35,16 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seller.product'),
         ),
         migrations.AddField(
+            model_name='review',
+            name='product',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='seller.product'),
+        ),
+        migrations.AddField(
+            model_name='review',
+            name='customer',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='customer.customer'),
+        ),
+        migrations.AddField(
             model_name='order',
             name='customer',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='customer.customer'),

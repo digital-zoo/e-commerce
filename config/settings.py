@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'customer',
     'seller',
+    'widget_tweaks', # 로그인 기능 구현을 위한 
 ]
 
 MIDDLEWARE = [
@@ -49,7 +50,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -122,7 +123,14 @@ STATICFILES_DIRS = [BASE_DIR/'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'customer.MyUser'
+AUTH_USER_MODEL = 'customer.Customer'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# LOGIN_REDIRECT_URL = '/'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
+    'seller.backends.SellerAuthenticationBackend', # Seller 인증 백엔드
+]
