@@ -60,17 +60,25 @@ def cart(request, pk):
 
 # 장바구기에 아이템 추가하는 메서드
 def add_to_cart(request):
-    user = request.user
-    product_id = request.POST['product_id']
-    product = Product.objects.get(product_id=product_id)
+    if request.user.is_authenticated: # 로그인한 유저
+        user = request.user
+        product_id = request.POST['product_id']
+        product = Product.objects.get(product_id=product_id)
+        
+        cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
+        cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity':0})
+        cartitem.quantity += int(request.POST['quantity'])
+        cartitem.save()
+        
+        return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
     
-    cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
-    cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity':0})
-    cartitem.quantity += int(request.POST['quantity'])
-    cartitem.save()
-    
-    return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
-
+    # else: # 로그인x 유저
+    #     #cart = request.session.get('cart', {})
+    #     product_id = request.POST['product_id']
+    #     cart = request.session[product_id] = {}
+    #     cart[product_id] = cart.get(product_id, 0) + int(request.POST['quantity'])
+    #     request.session['test'] = 12
+    #     return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
 # 연희님 코드
 def product_detail(request, product_id):
     user = request.user
@@ -147,6 +155,18 @@ def get_cart_summary(request):
         'final_price': final_price
     })
 
+# 세션 장바구니
+def guest_cart(request):
+    # 세션에서 장바구니를 가져옵니다.
+    cart = request.session.get('cart', {})
+
+    # 장바구니에 있는 상품들의 정보를 가져와서 템플릿에 전달합니다.
+    products = Product.objects.filter(id__in=cart.keys())
+    for product in products:
+        product.quantity = cart[str(product.id)]
+    
+    return render(request, 'customer/cart.html', {'products': products})
+
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate,login,logout
 from django.http import HttpResponse
@@ -169,3 +189,4 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("customer:login")
+

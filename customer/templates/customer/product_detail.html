@@ -74,7 +74,14 @@
     <!-- // 'X' 닫기 버튼 추가  -->
     <div id="close-btn" style="cursor: pointer; text-align: right;">X</div>
     <p>장바구니에 담겼습니다.</p>
+    {% comment %}
+    <!-- <a id='cart-link' href="{% url 'customer:cart' user.id %}">장바구니로 이동하기</a> -->
+    {% endcomment %}
+    {% if user.is_authenticated %}
     <a id='cart-link' href="{% url 'customer:cart' user.id %}">장바구니로 이동하기</a>
+    {% else %}
+    <a id='cart-link' href="{% url 'customer:guest_cart' %}">장바구니로 이동하기</a>
+    {% endif %}
 </div>
 
     <!-- Bootstrap JS with Popper -->
