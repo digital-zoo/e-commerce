@@ -13,8 +13,11 @@ urlpatterns = [
     path('cart/guest/', views.guest_cart, name='guest_cart'), # 비회원 장바구니 url
 
     path('quick_checkout/', quick_checkout, name='quick_checkout'),
+    path('cart_checkout/', cart_checkout, name='cart_checkout'),
     path('save_order/', save_order, name='save_order'),
+    path('save_order_from_cart/', save_order_from_cart, name='save_order_from_cart'),
     path('save_payment/', save_payment, name='save_payment'),
+    path('save_payment_from_cart/', save_payment_from_cart, name='save_payment_from_cart'),
     path('order_success/', order_success, name='order_success'),
     path('order_fail/', order_fail, name='order_fail'),
     path('login/', login_view, name='login'),
