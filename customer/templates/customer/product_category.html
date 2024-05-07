@@ -1,5 +1,28 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
+  <!-- 정렬 -->
+{% block sorted_by %}
+  <div class="container">
+  <div class="d-flex flex-wrap mt-4 "> 
+    {% if current_sorted_by == 'order' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='order' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='order' %}" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% endif %}  
+    {% if current_sorted_by == 'newest' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='newest' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>  
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='newest' %}" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>
+    {% endif %}  
+    {% if current_sorted_by == 'like' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='like' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='like' %}" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% endif %}  
+  </div>
+  </div>
+{% endblock %}
+
 {% load custom_filters %}
 {% block content %}
 <div class="py-5 ">
@@ -21,7 +44,7 @@
                           <input type="hidden" id="csrfToken" value="{{csrf_token}}">
                       </div>
                       <div class="d-flex justify-content-between align-items-center">
-                          <a href="{% url 'customer:product_detail' product_id=product.product_id %}" class="btn btn-primary">자세히 보기</a>
+                          <a href="#" class="btn btn-primary">자세히 보기</a>
                           <button onclick="like_product('{{product.product_id}}')" class="btn p-0 mb-3 d-flex align-items-center">
                             <div id="buttonImg-{{product.product_id}}" class="mr-2 mx-1">
                                 {% if product|like_tf:user == True %}

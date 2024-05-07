@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth import get_user_model
 
-# 멤버쉽 테이블
+# 멤버쉽 테이블\\
 class Membership(models.Model):
     membership_id = models.IntegerField(primary_key=True)
     grade = models.CharField(max_length=255,unique=True)
     member_discount_rate = models.DecimalField(max_digits=3, decimal_places=2)    
-
 
 ###############
 # 유저 테이블 커스터 마이징을 위한 3단계
@@ -56,6 +56,7 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
 
     objects = MyUserManager()
 
+
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
         # 슈퍼유저에게는 모든 권한을 부여
@@ -70,8 +71,8 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
         return self.username
     
 
-# 3단계, customer 클래스 생성    
-class Customer(MyUser):        
+# 3단계, 상위 유저 클래스를 상속받는 customer 클래스 생성    
+class Customer(MyUser):    
     membership = models.ForeignKey(Membership, on_delete=models.DO_NOTHING)    
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
@@ -84,12 +85,16 @@ class Cart(models.Model):
     cart_id = models.AutoField(primary_key=True)  # 카트ID는 자동으로 생성되는 순차적인 정수
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)  # Customer 테이블과 외래키 관계, 
 
+# 카트 아이템 테이블
 class CartItem(models.Model):
     cartitem_id = models.AutoField(primary_key=True)  # 카트아이템ID는 자동으로 생성되는 순차적인 정수
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)  # 카트와의 외래키 관계, 카트가 삭제되면 관련된 카트아이템도 삭제
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)  # product와 외래키 관계, 
     quantity = models.IntegerField()  # 수량은 정수형
 
+    def get_total_price(self): # 한 유저의 카트에 담긴 총 금액을 출력하기 위한 메서드
+        return int(self.quantity * self.product.price * (1 - (self.product.discount_rate)))
+    
 class Order(models.Model):
     order_id = models.AutoField(primary_key=True) 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
@@ -112,6 +117,15 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return str(self.orderitem_id)
+    
+class Payment(models.Model):
+    payment_id = models.AutoField(primary_key=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    paid_amount = models.IntegerField(default=0)
+    imp_uid = models.CharField(max_length=100)
+    merchant_uid = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 
 class Like(models.Model):
     like_id = models.AutoField(primary_key=True)

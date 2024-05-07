@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 db_password=os.getenv("MY_DB_PASSWORD")
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'customer',
     'seller',
+    'widget_tweaks', # 로그인 기능 구현을 위한 
 ]
 
 MIDDLEWARE = [
@@ -122,11 +124,12 @@ STATICFILES_DIRS = [BASE_DIR/'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'customer.Customer' # 사용자 정의 user 모델을 Customer로 설정
-# 사용자 정의 user 모델은 1개만 설정할 수 있기 때문에 Seller는 잠시 보류
+AUTH_USER_MODEL = 'customer.Customer'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# LOGIN_REDIRECT_URL = '/'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
