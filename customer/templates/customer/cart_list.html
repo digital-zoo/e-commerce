@@ -14,18 +14,18 @@
                 <!-- cart-item의 구조 시작 -->
                 <div>
                     <div class="cart-item d-flex align-items-center justify-content-start mb-3 p-2 bg-light rounded" data-item-id="{{ item.product_id }}">
-                        <a href="{% url 'customer:product_detail' item.product_id %}" class="mr-3">
+                        <a href="{% url 'customer:product_detail' item.product_id %}">
                             <div class="img-container">
                                 <img class="img-fluid rounded" src="{% static 'example/소고기스테이크.png' %}" alt="{{ item.product.product_name }}" width="80">
                             </div>
                         </a>
                         <div class="flex-grow-1 d-flex flex-column justify-content-between">
                             <button class="btn btn-danger remove-button align-self-start">삭제</button>
-                            <div>
-                                <div class="fw-bold px-4">
+                            <div class="content-box">
+                                <div class="fw-bold">
                                     <a href="{% url 'customer:product_detail' item.product_id %}">{{ item.product.product_name }}</a>
                                 </div>
-                                <div class="px-4">할인 : <span class="text-decoration-line-through text-secondary">{{ item.product.price }}원</span> -> {{ item.product.price|calc_discount:item.product.discount_rate|floatformat:"0" }}원</div>
+                                <div>할인 : <span class="text-decoration-line-through text-secondary">{{ item.product.price }}원</span> -> {{ item.product.price|calc_discount:item.product.discount_rate|floatformat:"0" }}원</div>
                                 <div class="one-price" style="font-weight: bold; font-size: large;" data-item-id="{{ item.product_id }}">{{ item.get_total_price }}원</div>
                             </div>
                             <div class="quantity-controls d-flex align-items-center">
@@ -44,10 +44,24 @@
         {% endif %}
         <!-- 총 결제 금액 및 구매하기 버튼을 오른쪽에 배치하기 위한 div -->
         <div class="fixed-checkout">
-            <h3>총 상품 금액 : {{ total_price }}원</h3>
+            <h3>주문 예상 금액</h3>
+                <div class="text-block">
+                    <span>총 상품 금액</span>
+                    <span>{{ total_price }}원</span>
+                </div>
+                <div class="text-block">
+                    <span>총 할인 금액</span>
+                    <span>-{{ discount_price|floatformat:"0" }}원</span>
+                </div>
+                <hr>
+                <div class="text-block">
+                    <span>총 결제 금액</span>
+                    <span>{{ final_price|floatformat:"0" }}원</span>
+                </div>
+            <!-- <h3>총 상품 금액 : {{ total_price }}원</h3>
             <h3>총 할인 금액 : {{ discount_price|floatformat:"0" }}원</h3>
-            <h3>총 결제 금액 : {{ final_price|floatformat:"0" }}원</h3>
-            <button onclick="location.href='#'">구매하기</button>
+            <h3>총 결제 금액 : {{ final_price|floatformat:"0" }}원</h3> -->
+            <button class="buy-button" onclick="location.href='#'">구매하기</button>
         </div>
     </div>
 </div>
@@ -83,9 +97,9 @@
                         itemElement.remove();
                         // 총 결제 금액 업데이트 로직 추가
                         if(result.total_price !== undefined && result.discount_price !== undefined && result.final_price !== undefined) {
-                            $('h3:contains("총 상품 금액")').text('총 상품 금액: ' + result.total_price + '원');
-                            $('h3:contains("총 할인 금액")').text('총 할인 금액: ' + result.discount_price + '원');
-                            $('h3:contains("총 결제 금액")').text('총 결제 금액: ' + result.final_price + '원');
+                            $('span:contains("총 상품 금액")').next().text(result.total_price + '원');
+                            $('span:contains("총 할인 금액")').next().text('-' + result.discount_price + '원');
+                            $('span:contains("총 결제 금액")').next().text(result.final_price + '원');
                         }
                     } else {
                         alert("항목을 삭제하는데 문제가 발생했습니다.");
@@ -137,9 +151,9 @@
                         fieldToUpdate.val(newQuantity); // 새로운 수량으로 업데이트
                         // 최종 가격 업데이트
                         if(result.total_price !== undefined && result.discount_price !== undefined && result.final_price !== undefined && result.one_price !== undefined) {
-                            $('h3:contains("총 상품 금액")').text('총 상품 금액: ' + result.total_price + '원');
-                            $('h3:contains("총 할인 금액")').text('총 할인 금액: ' + result.discount_price + '원');
-                            $('h3:contains("총 결제 금액")').text('총 결제 금액: ' + result.final_price + '원');
+                            $('span:contains("총 상품 금액")').next().text(result.total_price + '원');
+                            $('span:contains("총 할인 금액")').next().text('-' + result.discount_price + '원');
+                            $('span:contains("총 결제 금액")').next().text(result.final_price + '원');
                             $('.one-price[data-item-id="' + productId + '"]').text(result.one_price + '원');
                         }
                     } else {
@@ -151,8 +165,6 @@
                 }
             });        
         }
-        
-        
     });
 
     
@@ -200,12 +212,46 @@
     
     }
 
+    .content-box {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
     .fixed-checkout {
         width: 350px; /* 필요에 따라 조정 */
+        height: 320px;
         background-color: white; /* 배경색 */
-        padding: 10px; /* 패딩 */
+        padding: 30px; /* 패딩 */
         box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
         z-index: 1000; /* 다른 요소 위에 표시 */
+    }
+
+    .fixed-checkout > h3     {
+        line-height: 50px;
+    }
+
+    .text-block{
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+            font-size: 20px;
+    }
+
+    .text-block span:nth-child(2){
+        font-weight: 500;
+    }
+
+    .buy-button {
+        background-color: #316CFE;
+        width: 100%;
+        height: 50px;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-weight: 700;
+        font-size: 20px;
+        margin-top: 20px;
     }
 </style>
 

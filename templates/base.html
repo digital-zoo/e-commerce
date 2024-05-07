@@ -7,7 +7,7 @@
   
 <body>
   {% block extra-style %}{% endblock %}  
-
+  {% load static %}
   <!-- 최상단 nav바 -->
   <nav class="py-2 border-bottom">
     <div class="container d-flex flex-wrap">
@@ -48,7 +48,7 @@
   <header class="py-2 border-bottom bg-body-tertiary">
     <div class="container d-flex flex-wrap justify-content-between align-items-center">
         <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none "> 
-            <span class="fs-4">COUPANG</span>
+            <img class="logo" src="{% static 'example/coupang_logo.png' %}" alt="logo" width="10">
         </a>
 
         <form class="d-flex align-items-center w-50" method="POST" action="{% url 'customer:search_product' %}">
@@ -131,6 +131,11 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  {% block extra-script %}{% endblock %}    
+  {% block extra-script %}{% endblock %}   
+  <style>
+    .logo {
+      width: 220px;
+    }
+  </style>
 </body>
 </html>
