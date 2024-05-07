@@ -130,57 +130,126 @@
     var code = "imp26236276";  // 가맹점 식별코드
     IMP.init(code);
 
-function requestPay() {
-    // 결제요청
-    IMP.request_pay({
-        // name과 amount만 있어도 결제 진행가능
-        pg : 'html5_inicis', // 이니시스 결제창 일반/정기결제
-        pay_method : $('#payment_method').val(), // 신용카드 
-        merchant_uid : 'merchant_' + new Date().getTime(), 
-        name : '{{ product.product_name }}',
-        amount : 100, // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
-        buyer_email : '{{ user.email }}',
-        buyer_name : '{{ user.username }}',
-        buyer_tel : '{{ user.phone_number }}',
-        buyer_addr : '{{ user.address }}',
-        buyer_postcode : '{{ user.postal_code }}',
-        m_redirect_url : '{% url "customer:order_success" %}' // 모바일 기준
-    }, function(response) { //결제 후 호출되는 callback함수
-        if ( response.success ) {
-            // 결제 성공 시, Ajax를 통해 응답 정보를 view로 전송
-            $.ajax({
-                url: "{% url 'customer:payment' %}",
-                type: "POST",
-                dataType: "json",
-                data : {
-                    csrfmiddlewaretoken : window.CSRF_TOKEN, // CSRF 토큰 추가
-                    postal_code: $('#postal_code').val(), // 우편번호
-                    shipping_address: $('#shipping_address').val(), // 배송 주소
-                    shipping_address_detail: $('#shipping_address_detail').val(), // 상세 주소
-                    recipient: $('#recipient').val(), // 수령인
-                    recipient_phone_number: $('#recipient_phone_number').val(), // 수령인 전화번호
-                    product_id: '{{ product.product_id }}', // 상품 ID
-                    quantity: '{{ quantity }}', // 수량
-                    final_price: '{{ final_price }}', // 총 주문 가격 -> 현재 DB에 저장되는 값
-                    payment_method: $('#payment_method').val(), // 결제 수단
-                    paid_amount: response.paid_amount, // 결제 금액 -> 임시 금액 100원/ test완료 이후 DB에 저장값으로 지정될 값
-                },
-                success: function(data) {
-                    // 처리 완료 후의 동작
-                    console.log('결제 정보 저장 완료');
-                    window.location.href = "{% url 'customer:order_success' %}"; // 리디렉션
-                },
-                error: function(xhr, status, error) {
-                    // 에러 처리
-                    console.error('결제 정보 저장 실패:', error);
-                    window.location.href = "{% url 'customer:order_fail' %}"; // 리디렉션
-                }
-            });
-        } else {
-            // 결제 실패 처리
-            console.error('결제 실패:', response.error_msg);
+    function requestPay() {
+    // 결제 정보를 서버로 전송. order,orderitem 테이블 생성하기 위함
+    $.ajax({
+        url: "{% url 'customer:save_order' %}",
+        type: "POST",
+        dataType: "json",
+        data : {
+            csrfmiddlewaretoken : window.CSRF_TOKEN, // CSRF 토큰 추가
+            postal_code: $('#postal_code').val(), // 우편번호
+            shipping_address: $('#shipping_address').val(), // 배송 주소
+            shipping_address_detail: $('#shipping_address_detail').val(), // 상세 주소
+            recipient: $('#recipient').val(), // 수령인
+            recipient_phone_number: $('#recipient_phone_number').val(), // 수령인 전화번호
+            product_id: '{{ product.product_id }}', // 상품 ID
+            quantity: '{{ quantity }}', // 수량
+            final_price: '{{ final_price }}', // 총 주문 가격 -> 현재 DB에 저장되는 값
+            payment_method: $('#payment_method').val() // 결제 수단
+        },
+        success: function(data) {
+            // 결제 정보 전송에 성공한 경우. 즉, order,orderitem 테이블 생성 성공한 경우            
+            if (data.success) {
+                // 서버에서 받은 결제 정보를 이용하여 IMP.request_pay 실행
+                IMP.request_pay({
+                    // name과 amount만 있어도 결제 진행가능
+                    pg : 'html5_inicis', // 이니시스 결제창
+                    pay_method : $('#payment_method').val(), // 신용카드 
+                    merchant_uid : 'merchant_' + new Date().getTime(), 
+                    name : '{{ product.product_name }}',
+                    amount : 100, // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
+                    buyer_email : '{{ user.email }}',
+                    buyer_name : '{{ user.username }}',
+                    buyer_tel : '{{ user.phone_number }}',
+                    buyer_addr : '{{ user.address }}',
+                    buyer_postcode : '{{ user.postal_code }}',
+                    m_redirect_url : '{% url "customer:order_success" %}' // 모바일 기준
+                }, function(response) { //결제 후 호출되는 callback함수
+                    var form = $('<form></form>');
+                    form.attr('method', 'post');
+                    form.attr('action', '{% url "customer:order_fail" %}');
+                    var csrfTokenInput = $('<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />');
+                    form.append(csrfTokenInput);
+
+                    if ( response.success ) { // 어찌됐든 결제 과정은 성공하고 돈은 나감 
+                        // 결제 성공 시, 서버에 결제 정보를 저장하고 리디렉션
+                        $.ajax({
+                            url: "{% url 'customer:save_payment' %}",
+                            type: "POST",
+                            dataType: "json",
+                            data : {
+                                csrfmiddlewaretoken : window.CSRF_TOKEN, // CSRF 토큰 추가
+                                // 결제 성공 정보 및 서버에서 받은 결제 정보 전송
+                                order_id: data.order_id,
+                                imp_uid: response.imp_uid,
+                                merchant_uid: response.merchant_uid,
+                                paid_amount: response.paid_amount,
+                                product_id: '{{ product.product_id }}', // 상품 ID
+                                quantity: '{{ quantity }}', // 수량
+                            },
+                            success: function(data) {
+                                if ( data.success ) {
+                                    // 결제 정보 저장 완료 후 리디렉션
+                                    console.log('결제 완벽 성공'); // 결제 완벽 성공
+                                    window.location.href = "{% url 'customer:order_success' %}"; // 리디렉션
+                                } else {
+                                    // 핸들된 오류 -> 결제 이후 재고부족
+                                    console.error('결제를 정보를 처리하는 중 문제가 발생하였습니다 :', data.message);
+                                    // 여기서 환불처리 진짜 해줘야함...;;;;;;; 환불처리중 상태로 먼저 상태 업데이트 된 상태임
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                // 결제 정보 저장 실패 시 리디렉션
+                                // 에러!! 는 핸들 안된 에러만 여기서 처리!!!!!!!!!!!!!!! 주의
+                                // 오더에서 재고 확인만하고 페이에서 재고 줄이려고 했는데->오더 성공 ->결제 하는 과정에 누가 다 사갔어->결제는 완료했어->페이에서 재고 줄이려고 하니깐? 안돼.이미 다 팔렸어->환불 앤딩 결제 취소 앤딩 -> 여기서 결제 취소하고, 오더의 결제 방법은 쓸모있을수도 있으니 그대로 -> 오더의 오더상태를 주문취소로 수정 -> 오더 삭제?는 생각하기
+                                // 결제 환불해줘야 함 . 결제프로세스 자체는 성공후에 일어나는일
+                                // save_payment뷰 처리 중 문제가 생김 -> 그중 핸들 안된 에러 -> 뭔가 테이블 이상 꼬임 등
+                                // 상품이 없다던지 디비에 문제 생긴 경우
+                                // 주문중이라고 표시 됨 ;; 트랜젝션에 묶여서(실제론 결제 완료됨)
+                                console.error('결제 정보를 처리하는 중 문제가 생겼습니다. :', error);
+                                
+                                // window.location.href = "{% url 'customer:order_fail' %}"; // 리디렉션
+                            }
+                        });
+                    } else {
+                        // 결제 과정 자체가 실패한경우!!!!!!!!!!!!!!!!!!!!!11
+                        // 결제 실패 시 처리
+                        // 돈이 없었나? 다시 결제창 띄워줄까?--> 걍 해당 오더 오더아이템 다 삭제?
+                        // 결제 중간에 창 종료해도 여기 ->주문 완료 상태, 재고 안변함 -> 아이엠포트 결제 그 자체 행위중 생긴 오류는
+                        console.error('결제가 처리되지 못하였습니다.', response.error_msg);
+                        //alert('결제 실패 :', response.error_msg); // 오더,오더드아이템은 만들어진 상태 -> 삭제하려면 다시 서버통신;;; 그냥 결제실패 처리
+
+                        var orderStatus = $('<input type="hidden" name="order_status" value="결제실패" />');
+                        var orderId = $('<input type="hidden" name="order_id" value="' + data.order_id + '" />');
+                        form.append(orderStatus);
+                        form.append(orderId);
+                        
+                        $('body').append(form);
+                        form.submit();
+                        // alert('결제 실패: ' + response.error_msg);
+                        
+                        // window.location.href = "{% url 'customer:order_fail' %}";
+                        //location.reload();
+                    }
+                });
+            } else {
+                // 결제 정보 전송에 실패한 경우 
+                // 핸들된 재고 없음 케이스 -> 테이블 생성 로직 실행도 안됨
+                console.error('구매서를 작성하는 중 문제가 발생하였습니다 :', data.message);
+                alert('구매서를 작성하는 중 문제가 발생하였습니다 :', data.message);
+                //window.location.href = "{% url 'customer:order_fail' %}"; // 리디렉션
+            }
+        },
+        error: function(xhr, status, error) {
+            // Ajax 오류 처리 // 결제 정보 전송에 실패한 경우. 즉, order,orderitem 테이블 생성을 못한 경우 -> 롤백일어남
+            // 어떤 경우든 핸들하지 않은 에러가 발생한 경우
+            console.error('Ajax 오류: 구매서를 작성하는 중 문제가 발생하였습니다. 구매서에 유효한 값을 입력했는지 확인하십시오. 문제가 지속되는 경우, 판매점에 문의하세요.', error);
+            alert('구매서를 작성하는 중 문제가 발생하였습니다. 구매서에 유효한 값을 입력했는지 확인하십시오. 문제가 지속되는 경우, 판매점에 문의하세요.');
+            //window.location.href = "{% url 'customer:order_fail' %}"; // 리디렉션. 테이블 자체가 생성안됨. 위 메세지 페이지에 넘기기
         }
     });
 }
+
 </script>
 {% endblock %}
