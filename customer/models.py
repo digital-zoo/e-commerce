@@ -77,7 +77,7 @@ class Customer(MyUser):
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
-    is_snsid = models.BooleanField()
+    is_snsid = models.BooleanField(default=False)
     is_advertise = models.BooleanField(default=False) # 광고 동의 여부
 
 # 카트 테이블
