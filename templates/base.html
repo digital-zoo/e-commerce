@@ -43,16 +43,18 @@
     </div>
   </nav>
 
+{% block search %}
   <!-- 로고+검색+부가서비스로 구성 -->
   <header class="py-2 border-bottom bg-body-tertiary">
     <div class="container d-flex flex-wrap justify-content-between align-items-center">
         <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none "> 
             <span class="fs-4">COUPANG</span>
         </a>
-        
-        <form class="d-flex align-items-center w-50" action="" method="post">{% csrf_token %}
-            <input type="search" class="form-control w-80" placeholder="Search..." name="search_word">
-            <button type="submit" class="btn btn-primary w-20">SEARCH</button>
+
+        <form class="d-flex align-items-center w-50" method="POST" action="{% url 'customer:search_product' %}">
+          {% csrf_token %}
+          <input type="text" class="form-control w-80" placeholder="Search..." name="search_word">
+          <button type="submit" class="btn btn-primary w-20">SEARCH</button>
         </form>
         
    
@@ -65,8 +67,10 @@
             {% endif %}
         </div>
     </div>
-
+  {% endblock%}
+  
     <!-- 카테고리 -->
+  {% block category %}
     <div class="container d-flex flex-wrap justify-content-center my-3">
       {% for category in categories %}
         {% if current_category == category %}
@@ -77,6 +81,31 @@
       {% endfor %}
     </div>
   </header>
+  {% endblock %}
+
+
+  <!-- 정렬 -->
+{% block sorted_by %}
+  <div class="container">
+  <div class="d-flex flex-wrap mt-4 "> 
+    {% if current_sorted_by == 'order' %} 
+    <a href="{% url 'customer:sorted_list' sorted_by='order' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% else %}
+    <a href="{% url 'customer:sorted_list' sorted_by='order' %}" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% endif %}  
+    {% if current_sorted_by == 'newest' %} 
+    <a href="{% url 'customer:sorted_list' sorted_by='newest' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>  
+    {% else %}
+    <a href="{% url 'customer:sorted_list' sorted_by='newest' %}" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>
+    {% endif %}  
+    {% if current_sorted_by == 'like' %} 
+    <a href="{% url 'customer:sorted_list' sorted_by='like' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% else %}
+    <a href="{% url 'customer:sorted_list' sorted_by='like' %}" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% endif %}  
+  </div>
+  </div>
+{% endblock %}
 
 
   <div class="container">

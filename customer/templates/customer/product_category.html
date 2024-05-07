@@ -1,5 +1,28 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
+  <!-- 정렬 -->
+{% block sorted_by %}
+  <div class="container">
+  <div class="d-flex flex-wrap mt-4 "> 
+    {% if current_sorted_by == 'order' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='order' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='order' %}" class="link-body-emphasis text-decoration-none mx-2">주문순</a> 
+    {% endif %}  
+    {% if current_sorted_by == 'newest' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='newest' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>  
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='newest' %}" class="link-body-emphasis text-decoration-none mx-2">할인율순</a>
+    {% endif %}  
+    {% if current_sorted_by == 'like' %} 
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='like' %}" style="font-weight: bold;" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% else %}
+    <a href="{% url 'customer:category_sorted_list' category_id=current_category.category_id sorted_by='like' %}" class="link-body-emphasis text-decoration-none mx-2">좋아요순</a>
+    {% endif %}  
+  </div>
+  </div>
+{% endblock %}
+
 {% load custom_filters %}
 {% block content %}
 <div class="py-5 ">
