@@ -12,6 +12,11 @@ urlpatterns = [
     path('cart/get_cart_summary/<int:user_id>/', views.get_cart_summary, name='get_cart_summary'), # 수량에 따른 가격 변경 처리 url
     path('cart/guest/', views.guest_cart, name='guest_cart'), # 비회원 장바구니 url
 
+    path('quick_checkout/', quick_checkout, name='quick_checkout'),
+    path('save_order/', save_order, name='save_order'),
+    path('save_payment/', save_payment, name='save_payment'),
+    path('order_success/', order_success, name='order_success'),
+    path('order_fail/', order_fail, name='order_fail'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
 

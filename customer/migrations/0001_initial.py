@@ -4,7 +4,6 @@
 
 
 import django.db.models.deletion
-from django.conf import settings
 from django.db import migrations, models
 
 
@@ -80,6 +79,13 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Payment',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('final_price', models.IntegerField(default=0)),
+            ],
+        ),
+        migrations.CreateModel(
             name='Review',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -102,7 +108,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Customer',
             fields=[
-                ('myuser_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to=settings.AUTH_USER_MODEL)),
+                ('myuser_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='customer.myuser')),
                 ('customer_name', models.CharField(max_length=255)),
                 ('address', models.CharField(max_length=255, null=True)),
                 ('postal_code', models.CharField(max_length=255, null=True)),
