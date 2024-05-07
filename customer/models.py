@@ -119,8 +119,12 @@ class OrderItem(models.Model):
         return str(self.orderitem_id)
     
 class Payment(models.Model):
+    payment_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    final_price = models.IntegerField(default=0)
+    paid_amount = models.IntegerField(default=0)
+    imp_uid = models.CharField(max_length=100)
+    merchant_uid = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 
 class Like(models.Model):

@@ -11,9 +11,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from datetime import date
-from datetime import datetime
 from django.http import JsonResponse
-import json
 from django.db import transaction
 
 # Create your views here.
@@ -447,7 +445,7 @@ def save_order(request):
         if product_udt.stock >= int(quantity): # 재고가 충분한지 확인
             pass
         else:
-            return JsonResponse({'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다'}) # 롤백(이 단계에선 할 것 없음), 종료
+            return JsonResponse({'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다'})
         
         # 구매자 정보 불러오기
         user = request.user
@@ -461,8 +459,6 @@ def save_order(request):
         recipient_phone_number = request.POST.get('recipient_phone_number')
         # 결제 정보 불러오기
         payment_method = request.POST.get('payment_method')
-        # # final_price = request.POST.get('paid_amount') # 실제 결제된 금액. 현재는 100원 -> 테스트 완료 후 사용할 금액
-        # final_price = request.POST.get('final_price') # 실제 상품 가격 -> 테스트 중 DB에 저장될 가격
         # 현재 날짜 가져오기
         today = date.today()
 
@@ -482,15 +478,7 @@ def save_order(request):
                     product=product,
                     quantity=quantity
                 )   
-
-    # 트랜잭션 시작
-    # 주문서 생성 및 주문 메뉴 생성
-    # 재고 차감
-    # 장바구니 비우기
-    # 실제 결제 진행
-    # 트랜잭션 커밋
-    # 트랜잭션 실패 시 롤백        
-        #return JsonResponse({'message': 'Order created successfully', 'order_id': order.order_id}, status=200)
+        
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
 
 @login_required
@@ -502,26 +490,20 @@ def save_payment(request):
         product_id = request.POST.get('product_id')
         # 선택한 상품 수량 불러오기
         quantity = request.POST.get('quantity')
-
-        order_id = request.POST.get('order_id')
         # 결제가 된 주문 가져오기
+        order_id = request.POST.get('order_id')
         order = Order.objects.get(order_id=order_id)
 
-        # 제품 재고 변경 # 동시성처리 # 결제 과정이 오래 걸리면 여기서 문제 발생
+        # 제품 재고 변경 # 동시성처리
         product_udt = Product.objects.select_for_update(nowait=False).get(product_id=product_id)
         if product_udt.stock >= int(quantity): # 재고가 충분할 때 정상처리
             product_udt.stock -= int(quantity)
-            #여기에 하단의 과정을 다 넣어야 하나??? 아마도??? 아님. 빨리 처리할 수록 좋음 어제까지 섹렉트호업데이트가 홀드 되는지 찾아보기 세이브까지 아니면 트랜젝션 모두
-            product_udt.save() #save가 트랜젝션에 영향 안주는게 맞는지 확인 필요--> 영향이 가는 듯 -> 안감!!!
-
-            # order.order_status = '오징어오징어' # 아래서 핸들 안된 오류 발생하니깐 적용 안됨
-            # order.save()
+            product_udt.save()
         else:
-            # 결제 취소..는 돌아가서 
-            # 순서가 위랑 결제 취소랑 안 맞지만 여기서 오더 주문취소 처리->뒤에서 가능하면 환불이후 환불처리?
-            order.order_status = '환불처리중'
-            order.save() # 환불처리로 바뀜 -> 지금 트렌젝션 처리상 여기서 끊기면 안되는데..? ㅇㄴ
-            return JsonResponse({'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다. 환불을 도와드리겠습니다.'}) # 롤백(이 단계에선 할 것 없음)아님!! 핸들된 오류, 종료
+            # 재고 부족
+            order.order_status = '환불대기'
+            order.save()
+            return JsonResponse({'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다. 영업일 2일 이내로 환불을 도와드리겠습니다.'}) 
 
         order.order_status = '결제완료'
         order.save()
@@ -533,41 +515,45 @@ def save_payment(request):
         # #DB 백업 -> DB에 Payment 테이블 생성 후 사용가능
         # Payment.objects.create(
         #             order = order,
-        #             final_price = paid_amount, # 필드 이름 paid_amount으로 바꾸기
-        #             #imp_uid, merchant_uid 필드 생성 하고 넣기
+        #             paid_amount = paid_amount, 
+        #             imp_uid = imp_uid, 
+        #             merchant_uid = merchant_uid
         #         )
-        return JsonResponse({'success': True, 'message': 'Payment created successfully'}) # 메시지는 안쓰임
+        return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
 def order_success(request):
-        # 상품이랑 결제 정보보여주기
-        return render(request, 'customer/order_confirmation.html')
+    # 결제가 된 주문 가져오기
+    order_id = request.GET.get('order_id')
+    order = Order.objects.get(order_id=order_id)   
+    order_items = OrderItem.objects.filter(order = order)
+    # payment = Payment.objects.get(order=order)
+        
+    context={
+        'order' : order,
+        'order_items' : order_items,
+        # 'payment' : payment
+        }
+
+    return render(request, 'customer/order_confirmation.html', context)
 
 def order_fail(request):
     if request.method == 'POST':
-        order_status = request.POST.get('order_status')
+        # 수정할 order가져오기
         order_id = request.POST.get('order_id')
-
+        order_status = request.POST.get('order_status')
+        err_message = request.POST.get('err_message')
+        # order_status 수정하기
         order = Order.objects.get(order_id=order_id)
         order.order_status = order_status
         order.save()
-
+        # 사용자에게 안내할 메세지
         context={
-            'message' : '클라이언트 메세지 받아올예정',
+            'message' : err_message,
             }
-
-        #return JsonResponse({'message': '히히히ㅣ'})
         return render(request, 'customer/order_fail.html', context)
-
-
-        # context={
-        #     'order_id' : order_id,
-        #     'order_status' : order_status
-        #     }
-        
-        # return render(request, 'customer/order_fail.html', context)
     
-    if request.method == 'GET':
-        context={
-            'message' : '결제과정에서 문제가 생겼습니다.',
-            }
-        return render(request, 'customer/order_fail.html', context)
+    # if request.method == 'GET':
+    #     context={
+    #         'message' : '결제과정에서 문제가 생겼습니다.',
+    #         }
+    #     return render(request, 'customer/order_fail.html', context)
