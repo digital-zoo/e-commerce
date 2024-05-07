@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+# from django.contrib import messages
 
 # Create your views here.
 class CategoryList(ListView):
@@ -47,7 +47,7 @@ def login_view(request):
             return redirect('home')
         else:
             # 실패한 경우, 로그인 페이지에 에러 메시지를 표시할 수 있습니다.
-            messages.error(request, '로그인 실패. 다시 시도해주세요.')
+            # messages.error(request, '로그인 실패. 다시 시도해주세요.')
             return redirect('customer:login')
     else:
         # GET 요청일 경우 로그인 폼을 보여주는 페이지를 렌더링
@@ -84,13 +84,13 @@ def profile_edit_view(request):
         # 현재 사용자를 제외한 다른 사용자가 제출된 이메일을 사용하고 있는지 확인
         if MyUser.objects.filter(~Q(pk=user.pk), email=new_email).exists():
             # 만약 제출된 이메일이 현재 사용자를 제외한 다른 사용자에 의해 이미 사용되고 있다면 오류 메시지를 설정하고 리디렉션
-            messages.error(request, "입력하신 이메일은 이미 사용 중입니다.")
+            # messages.error(request, "입력하신 이메일은 이미 사용 중입니다.")
             return redirect('customer:profile_edit')        
         user.email = new_email
 
         new_phone_number = request.POST.get("phone_number")      
         if MyUser.objects.filter(~Q(pk=user.pk), phone_number=new_phone_number).exists():            
-            messages.error(request, "입력하신 휴대폰 번호는 이미 사용 중입니다.")
+            # messages.error(request, "입력하신 휴대폰 번호는 이미 사용 중입니다.")
             return redirect('customer:profile_edit')        
         user.phone_number = new_phone_number
         
@@ -102,7 +102,7 @@ def profile_edit_view(request):
         customer.postal_code = request.POST.get("postal_code")
         customer.save()
         
-        messages.success(request, "프로필이 성공적으로 업데이트되었습니다.")
+        # messages.success(request, "프로필이 성공적으로 업데이트되었습니다.")
         return redirect('customer:profile_edit')
     else:
         if not request.user.is_authenticated:
@@ -137,10 +137,10 @@ def change_password_view(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)  # 중요: 비밀번호가 변경된 후에도 사용자가 로그아웃되지 않도록 함
-            messages.success(request, "비밀번호 변경 성공")
+            # messages.success(request, "비밀번호 변경 성공")
             return redirect('customer:mypage')
         else:
-            messages.error(request, "비밀번호 변경이 실패하였습니다.다시 시도 해주세요.")
+            # messages.error(request, "비밀번호 변경이 실패하였습니다.다시 시도 해주세요.")
             return redirect('customer:change_password')
     else:
         form = PasswordChangeForm(request.user)
@@ -152,9 +152,9 @@ def delete_customer_view(request):
         # 현재 로그인한 사용자를 삭제합니다.
         user = request.user
         user.delete()
-        messages.success(request, '계정이 성공적으로 삭제되었습니다.')
+        # messages.success(request, '계정이 성공적으로 삭제되었습니다.')
         return redirect('home')
     else:
-        messages.error(request, '계정이 삭제가 실패했습니다.')
+        # messages.error(request, '계정이 삭제가 실패했습니다.')
         return render(request, 'customer/delete_customer.html')
     

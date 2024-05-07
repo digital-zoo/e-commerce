@@ -1,14 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>판매자 회원가입</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
+    <br>
     <h2>판매자 회원가입</h2>
+    <br>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">가입하기</button>
+        <button type="submit" class="btn btn-primary mb-2">가입하기</button>
     </form>
-</body>
-</html>
+{% endblock %}

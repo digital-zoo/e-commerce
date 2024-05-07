@@ -7,11 +7,11 @@
 {%else%}
 
 <!-- 메시지를 표시할 부분 시작 -->
-{% if messages %}
+<!-- {% if messages %}
     {% for message in messages %}
         <div hidden id="popup-message" data-message="{{ message }}" data-tag="{{ message.tags }}"></div>
     {% endfor %}
-{% endif %}
+{% endif %} -->
 <br>
 <h1 style="text-align: center;">판매자 로그인</h1>
 <br>
@@ -38,7 +38,7 @@
 {% endif %}
 
 <!-- JavaScript 코드 시작 -->
-<script>
+<!-- <script>
     document.addEventListener('DOMContentLoaded', function() {
         const messages = document.querySelectorAll('#popup-message');
         messages.forEach(function(messageDiv) {
@@ -47,7 +47,7 @@
             alert(`${tag}: ${message}`);
         });
     });
-    </script>
-    <!-- JavaScript 코드 끝 -->
+</script> -->
+<!-- JavaScript 코드 끝 -->
     
 {% endblock %}

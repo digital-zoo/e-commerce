@@ -6,11 +6,11 @@
     <h3>현재 접속 중인 아이디는  {{user.username}} 입니다.</h3>
 {% else %}
 <!-- 메시지를 표시할 부분 시작 -->
-{% if messages %}
+<!-- {% if messages %}
     {% for message in messages %}
         <div hidden id="popup-message" data-message="{{ message }}" data-tag="{{ message.tags }}"></div>
     {% endfor %}
-{% endif %}
+{% endif %} -->
 <!-- 메시지를 표시할 부분 끝 -->
 <br>
 <h1 style="text-align: center;">구매자 로그인</h1>
@@ -36,7 +36,7 @@
 
 {% endif %}
 <!-- JavaScript 코드 시작 -->
-<script>
+<!-- <script>
 document.addEventListener('DOMContentLoaded', function() {
     const messages = document.querySelectorAll('#popup-message');
     messages.forEach(function(messageDiv) {
@@ -45,6 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
         alert(`${tag}: ${message}`);
     });
 });
-</script>
+</script> -->
 <!-- JavaScript 코드 끝 -->
 {% endblock %}
