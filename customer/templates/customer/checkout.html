@@ -189,6 +189,7 @@
                                 imp_uid: response.imp_uid, // 결제 상점
                                 merchant_uid: response.merchant_uid, // 결제 번호
                                 paid_amount: response.paid_amount, // 실제 지불한 금액
+                                final_price: '{{ final_price }}', // 결제 가격 -> 현재 DB에 저장되는 값
                                 product_id: '{{ product.product_id }}', // 상품 ID
                                 quantity: '{{ quantity }}', // 수량
                             },
