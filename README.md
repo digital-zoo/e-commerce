@@ -22,14 +22,20 @@ AJAX를 이용한 비동기 처리를 통해 페이지의 새로고침없이 서
 
 
 1. 장바구니에 상품 담기
+<br>
+
 ![put](https://github.com/digital-zoo/e-commerce/assets/162934058/536a6b64-62f3-4cf1-8b68-0d6fe143f945)
 <br>
 
 2. 장바구니에서 상품 삭제
+<br>
+
 ![delete](https://github.com/digital-zoo/e-commerce/assets/162934058/b2ce4c06-9b22-469e-9228-3dea9e7df638)
 <br>
 
 3. 장바구니에서 수량 변경
+<br>
+
 ![changequantity](https://github.com/digital-zoo/e-commerce/assets/162934058/3c912a57-db44-420d-a083-6c15a4bbffa8)
 <br>
 
