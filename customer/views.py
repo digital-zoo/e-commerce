@@ -224,7 +224,7 @@ def delete_cart_item(request, user_id):
             return JsonResponse({'success': False, 'error': str(e)})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request'})
-    
+   
 # 장바구니 수량 변경
 def update_quantity(request, user_id):
     cart = Cart.objects.get(customer_id=user_id)
