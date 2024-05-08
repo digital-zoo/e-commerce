@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 <body>
-    
+{% block sorted_by %}
+{% endblock %}
 
 {% block content %}
 
@@ -65,7 +66,7 @@
     </div>
 </form>
 
-{% endblock %}
+
 
 </body>
 <script>
@@ -92,3 +93,5 @@ fileInput.addEventListener('change', function() {
   }
 });
 </script>
+
+{% endblock %}
