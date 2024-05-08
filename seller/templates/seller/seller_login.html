@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
+{% block sorted_by %}
+{% endblock %}
 {% block content %}
-{%if user.is_authenticated %}
+{% if user.is_authenticated and user.company_name is not none%}
     <br>
     <br>    
     <h3>현재 접속 중인 판매자 아이디는  {{user.username}} 입니다.</h3>

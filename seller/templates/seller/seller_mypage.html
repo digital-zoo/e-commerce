@@ -1,42 +1,37 @@
 {% extends 'base.html' %}
-
+{% block sorted_by %}
+{% endblock %}
 {% block content %}
 <div class="container mt-3">
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and user.company_name is not none%}
     <div class="row">
         <!-- 좌측 사이드바 -->
         <div class="col-md-3">
             
             <div class="bg-primary text-white p-3 mb-3" style="font-size: 1.5rem;"> 
                 판매자 페이지
-            </div>
+            </div>       
+
             <!-- 하단 박스 -->
             <div class="border border-secondary p-3 bg-white mb-3">
-                <h5>1</h5>
-                
-            </div>
-            <div class="border border-secondary p-3 bg-white mb-3">
-                <h5>2</h5>
-                
-            </div>
-            <div class="border border-secondary p-3 bg-white mb-3">
-                <h5>3</h5>
-                
+                <h5>판매 관리</h5>
+                <a href="{%url 'seller:seller_index'%}" class="d-block">제품 목록</a>
+                <a href="{%url 'seller:add_product'%}" class="d-block">제품 등록</a>
+                <a href="{%url 'seller:order_manage'%}" class="d-block">주문 관리</a>                
             </div>
             <div class="border border-secondary p-3 bg-white mb-3">
                 <h5>판매자 정보</h5>
-                <a href="{%url 'seller:seller_change_password'%}" class="d-block">판매자 비밀번호 수정</a>
+                <a href="{%url 'seller:seller_change_password'%}" class="d-block">판매자 비밀번호 변경</a>
                 <a href="{%url 'seller:seller_profile_edit'%}" class="d-block">판매자 정보 수정</a>
                 <a href="{%url 'seller:delete_seller'%}" class="d-block">판매자 탈퇴</a>                
             </div>
         </div>
         <!-- 우측 주요 기능 공간 -->
-        <div class="col-md-9">
-            <!-- 여기에 주요 내용을 추가합니다. -->
+        <div class="col-md-9">            
         </div>
     </div>
     {% else %}
-    <p>마이페이지는 로그인한 후 사용할 수 있습니다.</p>
+    <p>판매자 페이지는 판매자 로그인 후 사용할 수 있습니다.</p>
     {% endif %}
 </div>
 {% endblock %}

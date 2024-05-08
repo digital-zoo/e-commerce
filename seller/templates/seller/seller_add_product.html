@@ -1,5 +1,8 @@
+{% extends 'base.html' %}
+
 <body>
-    
+{% block sorted_by %}
+{% endblock %}
 
 {% block content %}
 
@@ -7,17 +10,7 @@
 
 <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
-    <div>      
-        <div>
-            <label for="seller" class="form-label">seller:</label>
-            <select name="seller" id="seller" required>
-                <option value="">--- 카테고리 선택 ---</option>
-                {% for seller in sellers %}                  
-                  <option value="{{ seller.id }}">{{ seller.username }}</option>
-                  
-                {% endfor %}
-              </select>            
-        </div> 
+    <div>
         <div>
             <label for="category" class="form-label">카테고리:</label>
             <select name="category" id="category" required>
@@ -69,11 +62,11 @@
         <div id="image-preview"></div>
     </div>
     <div class="text-center">
-        <input type="submit" value="제출" class="btn btn-success">
+        <input type="submit" value="등록" class="btn btn-success">
     </div>
 </form>
 
-{% endblock %}
+
 
 </body>
 <script>
@@ -100,3 +93,5 @@ fileInput.addEventListener('change', function() {
   }
 });
 </script>
+
+{% endblock %}

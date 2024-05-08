@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
-
+{% block sorted_by %}
+{% endblock %}
 {% block content %}
-{% if user.is_authenticated %}
+{% if user.is_authenticated and user.company_name is not none%}
     <div class="container">
         <br>
         <h2>판매자 정보 수정</h2>
@@ -61,6 +62,6 @@
         </form>
     </div>      
 {% else %}
-    <p>판매자 정보수정은 로그인 후 사용할 수 있습니다.</p>
+    <p>판매자 정보수정은 판매자 로그인 후 사용할 수 있습니다.</p>
 {% endif %}
 {% endblock %}
