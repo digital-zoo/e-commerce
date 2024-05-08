@@ -2,48 +2,80 @@
 {% load static %}
 {% load custom_filters %}
 {% block content %}
+<style>
+.carousel-control-prev, .carousel-control-next, .carousel-indicators button {
+    color: black; /* 텍스트 색상 */
+    border: none; /* 테두리 제거 */
+}
+
+.carousel-control-prev-icon, .carousel-control-next-icon, .carousel-indicators{
+    filter: invert(100%); /* 버튼 아이콘 색상 반전 */
+}
+</style>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6">
-            <img src="{% static 'example/소고기스테이크.png' %}" alt="{{ object.name }}" class="product-image">
+            <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    {% for product_img in product_imgs %}
+                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %} class="carousel-indicator"></button>
+                    {% endfor %}
+                </div>
+                <div class="carousel-inner">
+                    {% for product_img in product_imgs %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{% static 'example/소고기스테이크.png' %}" class="d-block w-100" alt="Product Image">
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
         </div>
         <div class="col-md-6 info-section">
-            <p class="text-muted mb-2 fs-5">상품 카테고리: {{ object.category_name }}</p>
-            <h2 class="product-name mb-2 fs-3">{{ object.product_name }}</h2>
-            <a href="#">{{ object.seller }}</a>
+            <p class="text-muted mb-2 fs-5">상품 카테고리: {{ product.category_name }}</p>
+            <h2 class="product-name mb-2 fs-3">{{ product.product_name }}</h2>
+            <a href="#">{{ product.seller }}</a>
             <div class="row align-items-center mb-4 mt-4">
                 <div class="col-md-6">
-                    {% if object.discount_rate %}
-                    <p class="price mb-0 fs-4"><span class="text-decoration-line-through text-secondary">{{ object.price }}원</span> {{ object.discount_rate|multiply_by_100|floatformat:"0" }}%</p>
-                    <p class="price mb-1 fs-3"> 할인가 : {{ object.price|calc_discount:object.discount_rate|floatformat:"0" }}원</p>
+                    {% if product.discount_rate %}
+                    <p class="price mb-0 fs-4"><span class="text-decoration-line-through text-secondary">{{ product.price }}원</span> {{ product.discount_rate|multiply_by_100|floatformat:"0" }}%</p>
+                    <p class="price mb-1 fs-3"> 할인가 : {{ product.price|calc_discount:product.discount_rate|floatformat:"0" }}원</p>
                     {% else %}  
-                    <p class="price mb-0 fs-4">{{ object.price }}원</span></p>
+                    <p class="price mb-0 fs-4">{{ product.price }}원</span></p>
                     {% endif %}
                 </div>
                 <div class="col-md-6">
-                    <p class="stock mb-1 fs-6">현재 재고: {{ object.stock }}개</p>
+                    <p class="stock mb-1 fs-6">현재 재고: {{ product.stock }}개</p>
                 </div>
             </div>
-            <p class="description mb-4 fs-5">{{ object.description }}</p>
+            <p class="description mb-4 fs-5">{{ product.description }}</p>
             <div class="quantity-section mb-4">
                 <div class="input-group">
-                    <button type="button" onclick="modifyAmount({{ object.product_id }}, -1)" class="btn btn-outline-primary fs-4" {% if object.stock <= 1 %}disabled{% endif %}>-</button>
+                    <button type="button" onclick="modifyAmount({{ product.product_id }}, -1)" class="btn btn-outline-primary fs-4" {% if product.stock <= 1 %}disabled{% endif %}>-</button>
                     <span class="badge bg-secondary quantity-badge fs-4"><span id="currentQuantity">1</span></span>
-                    <button type="button" onclick="modifyAmount({{ object.product_id }}, 1)" class="btn btn-outline-danger fs-4" {% if object.stock <= 1 %}disabled{% endif %}>+</button>
+                    <button type="button" onclick="modifyAmount({{ product.product_id }}, 1)" class="btn btn-outline-danger fs-4" {% if product.stock <= 1 %}disabled{% endif %}>+</button>
                 </div>
                 <div class="total-amount mt-3 fs-5">
-                    총 금액: <span id="totalAmount">{{ object.price|calc_discount:object.discount_rate }}</span>원
+                    총 금액: <span id="totalAmount">{{ product.price|calc_discount:product.discount_rate }}</span>원
                 </div>
             </div>
             <div class="action-buttons">
-                <!-- <form method="post" action="#" class="d-flex">
+                <form method="get" action="{% url 'customer:quick_checkout' %}" class="d-inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary fs-4 me-3">장바구니 담기</button>
-                    <a href="#" class="btn btn-success fs-4">바로구매</a>
-                </form> -->
-                <button id="addToCart" data-product-id="{{ object.product_id }}" class="btn btn-primary fs-4 me-3">장바구니에 담기</button>
-                <button id="buyNow" class="btn btn-success fs-4">바로 구매</button>
+                    <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                    <input type="hidden" name="quantity" id="quantityInput" value="">
+                    <button type="submit" onclick="getAmount()"  class="btn btn-success fs-4">바로구매</button>
+                </form>
+                <button id="addToCart" data-product-id="{{ product.product_id }}" class="btn btn-primary fs-4 me-3">장바구니에 담기</button>
+                <!-- <button id="buyNow" class="btn btn-success fs-4">바로 구매</button> -->
             </div>
         </div>
     </div>
@@ -74,7 +106,14 @@
     <!-- // 'X' 닫기 버튼 추가  -->
     <div id="close-btn" style="cursor: pointer; text-align: right;">X</div>
     <p>장바구니에 담겼습니다.</p>
+    {% comment %}
+    <!-- <a id='cart-link' href="{% url 'customer:cart' user.id %}">장바구니로 이동하기</a> -->
+    {% endcomment %}
+    {% if user.is_authenticated %}
     <a id='cart-link' href="{% url 'customer:cart' user.id %}">장바구니로 이동하기</a>
+    {% else %}
+    <a id='cart-link' href="{% url 'customer:guest_cart' %}">장바구니로 이동하기</a>
+    {% endif %}
 </div>
 
     <!-- Bootstrap JS with Popper -->
@@ -132,20 +171,42 @@
     }
 
     // Call the updateTotalAmount function initially with default quantity and price
-    updateTotalAmount(1, {{ object.price|calc_discount:object.discount_rate }});
+    updateTotalAmount(1, {{ product.price|calc_discount:product.discount_rate }});
 
     // Function to modify the quantity
     function modifyAmount(productId, amount) {
         var currentQuantity = parseInt(document.getElementById('currentQuantity').textContent);
         var newQuantity = currentQuantity + amount;
-        if (newQuantity >= 1 && newQuantity <= {{ object.stock }}) { // &&: 파이썬 and
+        if (newQuantity >= 1 && newQuantity <= {{ product.stock }}) { // &&: 파이썬 and
             document.getElementById('currentQuantity').textContent = newQuantity;
-            updateTotalAmount(newQuantity, {{ object.price|calc_discount:object.discount_rate }});
+            updateTotalAmount(newQuantity, {{ product.price|calc_discount:product.discount_rate }});
         }
     }
 </script>    
-<!-- <script>
-document.getElementById('totalQuantity').textContent = {{totalCartAmount}}
-document.getElementById('currentQuantity').textContent = {{cartAmount}}
-</script> -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Function to calculate and update the total amount
+    function updateTotalAmount(quantity, price) {
+        var totalAmount = quantity * price;
+        document.getElementById('totalAmount').textContent = totalAmount;
+    }
+
+    // Call the updateTotalAmount function initially with default quantity and price
+    updateTotalAmount(1, {{ product.price|calc_discount:product.discount_rate }});
+
+    // Function to modify the quantity
+    function modifyAmount(productId, amount) {
+        var currentQuantity = parseInt(document.getElementById('currentQuantity').textContent);
+        var newQuantity = currentQuantity + amount;
+        if (newQuantity >= 1 && newQuantity <= {{ product.stock }}) {
+            document.getElementById('currentQuantity').textContent = newQuantity;
+            updateTotalAmount(newQuantity, {{ product.price|calc_discount:product.discount_rate }});
+        }
+    }
+
+    function getAmount(){
+        var currentQuantity = document.getElementById('currentQuantity').innerText;
+        document.getElementById('quantityInput').value = currentQuantity;
+    }
+</script>
 {% endblock %}
