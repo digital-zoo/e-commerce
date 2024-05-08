@@ -149,7 +149,7 @@ def edit_product(request, product_id):
                 ProductImage.objects.create(product=product, image_url=image_url)
 
             messages.success(request, "상품 정보가 수정되었습니다.")
-            return redirect('seller:seller_index')        
+            return redirect('seller:seller_index') 
 
     context = {
         'product': product,
@@ -157,6 +157,10 @@ def edit_product(request, product_id):
     }
     return render(request, 'seller/seller_edit_product.html', context)
 
+def delete_product(request, product_id):
+    object=Product.objects.get(product_id=product_id)
+    object.delete()
+    return redirect('seller:seller_index')
 
 
 def seller_signup_view(request):

@@ -49,9 +49,6 @@
     <input type="file" name="files" multiple class="form-control" id="files">
     <div id="image-preview"></div>
 </div>
-
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
   {% if existing_images %}
     <h2>기존 이미지</h2>
     <ul class="list-group">
@@ -65,8 +62,16 @@
     </ul>
   {% endif %}
   <input type="hidden" name="delete_image_ids" value="">  <!-- 숨겨진 입력 요소 -->
-  <button type="submit" class="btn btn-primary">수정 완료</button>
-</form>  
+  <input type="hidden" name="product_id" value="{{ product.product_id }}">
+  <button type="submit" class="btn btn-primary">수정 완료</button>  
+</form>
+
+<form action="{% url 'seller:delete_product' product_id=product.product_id %}" method="post">
+  {% csrf_token %}
+  <input type="submit" value="삭제하기" class="btn btn-primary">
+</form>
+
+
 
 <script>
   $(document).ready(function() {
