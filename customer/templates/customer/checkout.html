@@ -258,7 +258,7 @@
                 // 주문 정보 전송에 실패한 경우. 즉, order,orderitem 테이블 생성을 못한 경우
                 // 상품 재고 부족이 원인
                 console.error('구매서를 작성하는 중 문제가 발생하였습니다 :', data.message);
-                alert('구매서를 작성하는 중 문제가 발생하였습니다 :', data.message);
+                alert('구매서를 작성하는 중 문제가 발생하였습니다 : ' + data.message);
             }
         },
         error: function(xhr, status, error) {
