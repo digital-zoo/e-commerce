@@ -224,7 +224,7 @@ def delete_cart_item(request, user_id):
             return JsonResponse({'success': False, 'error': str(e)})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request'})
-    
+   
 # 장바구니 수량 변경
 def update_quantity(request, user_id):
     cart = Cart.objects.get(customer_id=user_id)
@@ -429,14 +429,11 @@ def cart_checkout(request):
             final_price = discounted_price * item.quantity
             # 할인 되지 않은 해당 상품의, 상품 개수에 따른 총 가격 
             original_final_price = item.product.price * item.quantity
-            # 상품에 대한 이미지들을 가져오기
-            product_imgs = ProductImage.objects.filter(product = item.product)
             cart_items_info.append({
                 'product': item.product,
                 'quantity': item.quantity,
                 'discounted_price': discounted_price,
                 'final_price': final_price,
-                'product_imgs': product_imgs,
             })
             total_final_price += final_price
             total_original_final_price += original_final_price
@@ -460,8 +457,6 @@ def quick_checkout(request):
         # 선택한 상품 불러오기
         product_id = request.GET.get('product_id')
         product = Product.objects.get(product_id=product_id)
-        # 상품에 대한 이미지들을 가져오기
-        product_imgs = ProductImage.objects.filter(product = product)
         # 선택한 상품 수량 불러오기
         quantity = request.GET.get('quantity')
         # 가격 계산하기
@@ -474,7 +469,6 @@ def quick_checkout(request):
         'quantity': quantity,
         'discounted_price' : discounted_price,
         'final_price' : final_price,
-        'product_imgs': product_imgs,
         }
         return render(request, 'customer/checkout.html', context)
     
@@ -532,7 +526,6 @@ def save_order(request):
 @transaction.atomic
 def save_payment(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
-        print("post 호출됨(save_payment)")
         # 선택한 상품 id 불러오기
         product_id = request.POST.get('product_id')
         # 선택한 상품 수량 불러오기
@@ -557,15 +550,18 @@ def save_payment(request):
 
         imp_uid = request.POST.get('imp_uid')
         merchant_uid = request.POST.get('merchant_uid')
-        paid_amount = request.POST.get('paid_amount')
+        # paid_amount = request.POST.get('paid_amount') # 실제로 결제된 금액(현재 100원)
+        final_price_str = request.POST.get('final_price') # 결제 금액
+        paid_amount = int(float(final_price_str))  # 숫자로 변환
 
-        # #DB 백업 -> DB에 Payment 테이블 생성 후 사용가능
-        # Payment.objects.create(
-        #             order = order,
-        #             paid_amount = paid_amount, 
-        #             imp_uid = imp_uid, 
-        #             merchant_uid = merchant_uid
-        #         )
+        # 결제 내역 저장
+        Payment.objects.create(
+                    order = order,
+                    paid_amount = paid_amount, 
+                    imp_uid = imp_uid, 
+                    merchant_uid = merchant_uid
+                )
+        
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
 def order_success(request):

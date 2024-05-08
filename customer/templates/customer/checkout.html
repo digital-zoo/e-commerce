@@ -60,7 +60,7 @@
             <div class="order-items">
                 <div class="row mb-3">
                     <div class="col-md-2">
-                        <img src="{% static 'example/소고기스테이크.png' %}" style="width: 100px;" alt="{{ product.product_name }}" class="img-fluid">
+                        <img src="{{ product.images.all.0.image_url }}" style="width: 100px;" alt="{{ product.product_name }}" class="img-fluid">
                     </div>
                     <div class="col-md-6 align-self-center">
                         <h4><a href="{% url 'customer:product_detail' product_id=product.product_id %}">{{ product.product_name }}</a></h4>
@@ -189,6 +189,7 @@
                                 imp_uid: response.imp_uid, // 결제 상점
                                 merchant_uid: response.merchant_uid, // 결제 번호
                                 paid_amount: response.paid_amount, // 실제 지불한 금액
+                                final_price: '{{ final_price }}', // 결제 가격 -> 현재 DB에 저장되는 값
                                 product_id: '{{ product.product_id }}', // 상품 ID
                                 quantity: '{{ quantity }}', // 수량
                             },
