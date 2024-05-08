@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block sorted_by %}
+{% endblock %}
+
+{% block content %}
+
 <h1>상품 수정 ({{ product.product_name }})</h1>
 
 <form method="post" enctype="multipart/form-data">
@@ -65,7 +72,7 @@
   <input type="hidden" name="delete_image_ids" value="">  <!-- 숨겨진 입력 요소 -->
   <button type="submit" class="btn btn-primary">수정 완료</button>
 </form>  
-
+{% endblock %}
 <script>
   $(document).ready(function() {
     $('input[name="delete_image_ids"]').prev('ul').find('input[name="delete_image_ids"]').change(function() {

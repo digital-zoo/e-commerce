@@ -1,16 +1,22 @@
 from django.shortcuts import render,redirect
 from .models import Product, Seller, Category,ProductImage
 from django.core.files.storage import FileSystemStorage
-#from django.contrib.auth.models import User
 from django.contrib import messages
 from customer.models import  Order, OrderItem
 from config import settings
 import os
+from .forms import SellerSignupForm
+from django.http import HttpResponse
+from seller.backends import SellerAuthenticationBackend
+from django.contrib.auth import login,logout
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+# from django.contrib import messages
+from customer.models import MyUser
+from django.db.models import Q
 
-# Create your views here.
-def seller_index(request):
-    #product = Product.objects.filter(user=request.user)
-    product = Product.objects.all()
+def seller_index(request):    
+    product = Product.objects.filter(seller=request.user)
     category = Category.objects.all()
     product_iamge = ProductImage.objects.all()
     context={
@@ -34,13 +40,9 @@ def add_product(request):
         return render(request, 'seller/seller_add_product.html', context)
     # post
     elif request.method=="POST":
-        # 폼에서 전달되는 각 값을 뽑아와서 DB에 저장
-
-        # Food 내용을 구성 영역
-        # category = Category.objects.get(name=request.POST['category'])
-        seller_id = request.POST.get('seller')  #  seller ID   
-        seller = Seller.objects.get(id=seller_id)        
-        category_id = request.POST.get('category')  # seller ID    
+        # 내용 추가
+        seller = Seller.objects.get(id=request.user.id)        
+        category_id = request.POST.get('category')  
         category = Category.objects.get(category_id=category_id)        
         product_name = request.POST['product_name']
         price = request.POST['price']
@@ -79,12 +81,9 @@ def add_product(request):
 
 def order_manage(request):
 
-    seller_id = request.GET.get('seller')  
-    seller = Seller.objects.get(id=8)   # 로그인 기능 구현시 수정 필요
-    #seller = Seller.objects.get(user=request.user)  
+    seller = Seller.objects.get(id=request.user.id)            
     sold_products = Order.objects.filter(orderitem__product__seller=seller).distinct()  
-    context = {'sold_products': sold_products}
-    # 주문상태 변경 필요
+    context = {'sold_products': sold_products}    
     return render(request, 'seller/seller_order_manage.html', context)
 
 def edit_product(request, product_id):
@@ -100,10 +99,10 @@ def edit_product(request, product_id):
         product_name = request.POST['product_name']
         price = request.POST['price']
         description = request.POST['description']
-        is_visible = request.POST.get('is_visible', False)  # checkbox 수정필요
+        is_visible = request.POST.get('is_visible', False)  
         stock = request.POST['stock']
         discount_rate = request.POST['discount_rate']
-        is_option = request.POST.get('is_option', False)  # checkbox 수정필요
+        is_option = request.POST.get('is_option', False)  
 
         # 정보 업데이트
         product.product_name = product_name
@@ -114,11 +113,10 @@ def edit_product(request, product_id):
         product.discount_rate = discount_rate
         product.is_option = is_option
         product.save()
-
-        # 이미지 처리
+                
         uploaded_files = request.FILES.getlist('files')
 
-        # 삭제할 이미지 목록 (POST 파라미터에서 가져옴)
+        # 삭제할 이미지 목록
         delete_image_ids = request.POST.getlist('delete_image_ids')
 
         if delete_image_ids and any(delete_image_ids):
@@ -131,8 +129,7 @@ def edit_product(request, product_id):
                     fs = FileSystemStorage()
                     base_dir = settings.MEDIA_ROOT                    
                     #delete_url = os.path.join(base_dir, delete_image.image_url)
-                    delete_url = os.path.join(base_dir, delete_image.image_url.lstrip('/media/'))
-  # 경로를 올바르게 결합
+                    delete_url = os.path.join(base_dir, delete_image.image_url.lstrip('/media/'))    
                     fs.delete(delete_url)  # 이미지 파일 삭제
                     delete_image.delete()
                 except ProductImage.DoesNotExist:
@@ -152,8 +149,7 @@ def edit_product(request, product_id):
                 ProductImage.objects.create(product=product, image_url=image_url)
 
             messages.success(request, "상품 정보가 수정되었습니다.")
-            return redirect('seller:seller_index')
-        
+            return redirect('seller:seller_index')        
 
     context = {
         'product': product,
@@ -161,17 +157,7 @@ def edit_product(request, product_id):
     }
     return render(request, 'seller/seller_edit_product.html', context)
 
-from django.shortcuts import redirect
-from .forms import SellerSignupForm
-from django.http import HttpResponse
-from seller.backends import SellerAuthenticationBackend
-from django.contrib.auth import login,logout
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-# from django.contrib import messages
-from customer.models import MyUser
-from django.db.models import Q
-from .models import Seller
+
 
 def seller_signup_view(request):
     if request.method == 'POST':

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+<body>
+    
+
+{% block content %}
+{% if user.is_authenticated %}
+    <div class="container">
+        <br>
+        <h2>판매자 정보 수정</h2>
+        <br>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="username">아이디</label><br>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="username" name="username" value="{{ user.username }}" class="form-control" disabled><br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="company_name">회사명</label><br>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="company_name" name="company_name" value="{{company_name}}" class="form-control"><br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="email">이메일</label><br>
+                </div>
+                <div class="col-md-6">
+                    <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control"><br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="phone_number">휴대폰 번호</label><br>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="phone_number" name="phone_number" value="{{ user.phone_number }}" class="form-control"><br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="business_contact">회사 연락처</label><br>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="business_contact" name="business_contact" value="{{ business_contact }}" class="form-control"><br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 border-right"> <!-- 우측에 구분선을 추가하기 위해 border-right 클래스 추가 -->
+                    <label for="registration_number">사업자등록번호</label><br>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="registration_number" name="registration_number" value="{{ registration_number }}" class="form-control"><br>
+                </div>
+            </div>
+            <br>
+            <button type="submit" class="btn btn-primary">수정하기</button>        
+        </form>
+    </div>      
+{% else %}
+    <p>판매자 정보수정은 로그인 후 사용할 수 있습니다.</p>
+{% endif %}
+{% endblock %}
+</body>
