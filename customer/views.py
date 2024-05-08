@@ -39,7 +39,6 @@ class CategoryList(ListView):
         context['current_sorted_by'] = ''
         return context
 
-
 from django.db.models import Count
 class SortedList(ListView):
     template_name='home.html'
@@ -63,7 +62,6 @@ class SortedList(ListView):
         context['categories'] = Category.objects.all()
         context['current_sorted_by'] = self.kwargs['sorted_by']
         return context
-
 
 class CategorySortedList(ListView):
     template_name='customer/product_category.html'
@@ -97,8 +95,6 @@ class CategorySortedList(ListView):
         context['current_category'] = category
         return context
 
-
-
 def like_product(request,product_id):
     if request.method == 'POST' and  request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         customer = Customer.objects.all()[1]
@@ -120,7 +116,6 @@ def like_product(request,product_id):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request'})
     
-
 def search_product(request):
     if request.method == 'POST':
 
@@ -131,16 +126,16 @@ def search_product(request):
         else:
             product_list = []
         return render(request, 'customer/search.html', {'products': product_list, 'search_word': search_word})  
+
 # 장바구니 상세 페이지 처리    
 def cart(request, pk):
     cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
     cartitem = CartItem.objects.filter(cart_id=cart.cart_id) # 해당 유저의 장바구니에 속한 모든 아이템들
     if cartitem: # 장바구니에 물건이 있는 경우 
-
         # "item_total"이라는 필드 생성, 해당 필드에는 각 아이뎀의 수량과 가격을 곱한 아이템별 가격 표시 -> 집계 함수를 통해 총 가격 표현
-        total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total'] 
+        total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total'] 
         # 할인이 적용된 가격을 표현
-        discount_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+        discount_price = cartitem.annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
 
         context = {
             'object' : cartitem,
@@ -182,6 +177,7 @@ def add_to_cart(request):
     #     cart[product_id] = cart.get(product_id, 0) + int(request.POST['quantity'])
     #     request.session['test'] = 12
     #     return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+
 # 연희님 코드
 def product_detail(request, product_id):
     #user = request.user
@@ -204,13 +200,13 @@ def delete_cart_item(request, user_id):
         try:
             cart = Cart.objects.get(customer_id=user_id)
             CartItem.objects.get(cart_id=cart.cart_id, product_id=int(request.POST['product_id'])).delete()
-            cartitem = CartItem.objects.all()
+            cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
+
             if cartitem: # 장바구니에 남은 물건이 있는 경우
-                total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
-                final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+                total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+                final_price = cartitem.annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
                 discount_price = total_price - final_price
                 
-
                 return JsonResponse({
                     'success': True, 
                     'total_price' : total_price,
@@ -218,6 +214,7 @@ def delete_cart_item(request, user_id):
                     'final_price': final_price
                     })
             else: # 장바구니에 남은 물건이 없는 경우
+                
                 return JsonResponse({
                     'success': True, 
                     'total_price' : 0,
@@ -231,15 +228,17 @@ def delete_cart_item(request, user_id):
     
 # 장바구니 수량 변경
 def update_quantity(request, user_id):
-    # 장바구니의 수량을 변경해야함!
     cart = Cart.objects.get(customer_id=user_id)
     cartitem = CartItem.objects.get(cart_id=cart.cart_id, product_id=request.POST['product_id'])
     cartitem.quantity = int(request.POST['quantity']) # 요청한 수량으로 수량 변경
     cartitem.save() # 변경된 내용 저장
-    total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
-    final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
-    discount_price = total_price - final_price
     one_price = cartitem.product.price * (1 - cartitem.product.discount_rate) * cartitem.quantity # 각 아이템별 가격을 표시하기 위한 변수
+    cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
+    total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+    final_price = cartitem.annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+    discount_price = total_price - final_price
+    
+    
     return JsonResponse({
         'success' : True,
         'total_price': total_price,
@@ -248,24 +247,25 @@ def update_quantity(request, user_id):
         'one_price' : int(one_price)
     })
 
-# 장바구니 수량 변경에 따른 가격을 처리하기 위한 메서드
-def get_cart_summary(request):
-    total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
-    final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
-    discount_price = total_price - final_price 
-    return JsonResponse({
-        'success' : True,
-        'total_price': total_price,
-        'discount_price': discount_price,
-        'final_price': final_price
-    })
+# # 장바구니 수량 변경에 따른 가격을 처리하기 위한 메서드
+# def get_cart_summary(request):
+#     total_price = CartItem.objects.all().annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total']
+#     final_price = CartItem.objects.all().annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+#     discount_price = total_price - final_price 
+    
+#     return JsonResponse({
+#         'success' : True,
+#         'total_price': total_price,
+#         'discount_price': discount_price,
+#         'final_price': final_price
+#     })
 
 # 세션 장바구니
 def guest_cart(request):
-    # 세션에서 장바구니를 가져옵니다.
+    # 세션에서 장바구니를 가져옴
     cart = request.session.get('cart', {})
 
-    # 장바구니에 있는 상품들의 정보를 가져와서 템플릿에 전달합니다.
+    # 장바구니에 있는 상품들의 정보를 가져와서 템플릿에 전달함
     products = Product.objects.filter(id__in=cart.keys())
     for product in products:
         product.quantity = cart[str(product.id)]
