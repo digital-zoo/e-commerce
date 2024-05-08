@@ -19,7 +19,7 @@
                     <div class="cart-item d-flex align-items-center justify-content-start mb-3 p-2 bg-light rounded" data-item-id="{{ item.product_id }}">
                         <a href="{% url 'customer:product_detail' item.product_id %}">
                             <div class="img-container">
-                                <img class="img-fluid rounded" src="{% static 'example/소고기스테이크.png' %}" alt="{{ item.product.product_name }}" width="80">
+                                <img class="img-fluid rounded" src="{{ item.product.images.all.0.image_url }}" alt="{{ item.product.product_name }}" width="80">
                             </div>
                         </a>
                         <div class="flex-grow-1 d-flex flex-column justify-content-between">
