@@ -14,8 +14,7 @@ def multiply_by_100(value):
 @register.filter
 def like_tf(product, customer):
     try:
-        current_customer = Customer.objects.get(id=14)
-        if product.like_set.filter(customer=current_customer).exists():
+        if product.like_set.filter(customer=customer).exists():
             return True
         else:
             return False

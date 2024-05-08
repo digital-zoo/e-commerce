@@ -101,8 +101,7 @@ class CategorySortedList(ListView):
 
 def like_product(request,product_id):
     if request.method == 'POST' and  request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        customer = Customer.objects.all()[1]
-        # customer = get_object_or_404(Customer, id=13)
+        customer = request.user
         product = get_object_or_404(Product, pk=product_id)
         
         try:
