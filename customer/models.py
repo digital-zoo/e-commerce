@@ -40,7 +40,7 @@ class MyUserManager(BaseUserManager):
             password=password,
         )
         user.is_staff = True
-        user.is_superuser = True
+        user.is_superuser = True        
         user.save(using=self._db)
         return user
     
@@ -137,6 +137,8 @@ class Like(models.Model):
         ordering = ['-created_at']
 
 class ShippingAddress(models.Model):
+    shippingaddress_id = models.AutoField(primary_key=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     shipping_address_name = models.CharField(max_length=20)
     shipping_address = models.CharField(max_length=300)
     postal_code = models.CharField(max_length=5)
@@ -144,6 +146,7 @@ class ShippingAddress(models.Model):
     recipient_phone_number = models.CharField(max_length=20)
 
 class Review(models.Model):
+    review_id = models.AutoField(primary_key=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     content = models.TextField()

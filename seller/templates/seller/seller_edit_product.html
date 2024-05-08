@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block sorted_by %}
+{% endblock %}
+
+{% block content %}
+
 <h1>상품 수정 ({{ product.product_name }})</h1>
 
 <form method="post" enctype="multipart/form-data">
@@ -37,19 +44,11 @@
         <option value="False" {% if not product.is_option %}selected{% endif %}>없음</option>
     </select>
 </div>  
-  <div class="form-group">
-    <label for="images">상품 이미지 (여러 개 선택 가능):</label>
-    <input type="file" class="form-control" id="images" name="images" multiple>
-    <small class="text-muted">기존 이미지는 수정 페이지에서 변경할 수 없습니다. 새로운 이미지를 추가하려면 여기에 업로드하세요.</small>
-  </div>
   <div>
     <label class="form-label">사진을 올려주세요</label>
     <input type="file" name="files" multiple class="form-control" id="files">
     <div id="image-preview"></div>
 </div>
-
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
   {% if existing_images %}
     <h2>기존 이미지</h2>
     <ul class="list-group">
@@ -63,8 +62,16 @@
     </ul>
   {% endif %}
   <input type="hidden" name="delete_image_ids" value="">  <!-- 숨겨진 입력 요소 -->
-  <button type="submit" class="btn btn-primary">수정 완료</button>
-</form>  
+  <input type="hidden" name="product_id" value="{{ product.product_id }}">
+  <button type="submit" class="btn btn-primary">수정 완료</button>  
+</form>
+
+<form action="{% url 'seller:delete_product' product_id=product.product_id %}" method="post">
+  {% csrf_token %}
+  <input type="submit" value="삭제하기" class="btn btn-primary">
+</form>
+
+
 
 <script>
   $(document).ready(function() {
@@ -101,3 +108,5 @@
     }
   });
   </script>
+
+{% endblock %}

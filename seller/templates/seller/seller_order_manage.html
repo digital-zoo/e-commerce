@@ -1,12 +1,14 @@
-<head>
-    <meta charset="UTF-8">
-    <title>판매자 - 판매된 상품</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block sorted_by %}
+{% endblock %}
+{% block content %}
+
+<div>
     <h1>판매된 상품</h1>
 
     {% if sold_products %}
-        <table>
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>주문 ID</th>
@@ -46,5 +48,6 @@
     {% else %}
         <p>아직 판매된 상품이 없습니다.</p>
     {% endif %}
-</body>
+</div>
 </html>
+{% endblock %}
