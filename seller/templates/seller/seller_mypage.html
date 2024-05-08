@@ -9,18 +9,12 @@
             
             <div class="bg-primary text-white p-3 mb-3" style="font-size: 1.5rem;"> 
                 판매자 페이지
-            </div>
-
-            <div>
-                <a href="{% url 'seller:add_product' %}" class="btn btn-primary">제품 등록</a>
-            </div>            
-            <div>
-                <a href="{% url 'seller:order_manage' %}" class="btn btn-primary">주문 관리</a>
-            </div>
+            </div>       
 
             <!-- 하단 박스 -->
             <div class="border border-secondary p-3 bg-white mb-3">
                 <h5>판매 관리</h5>
+                <a href="{%url 'seller:seller_index'%}" class="d-block">제품 목록</a>
                 <a href="{%url 'seller:add_product'%}" class="d-block">제품 등록</a>
                 <a href="{%url 'seller:order_manage'%}" class="d-block">주문 관리</a>                
             </div>
