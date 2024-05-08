@@ -671,6 +671,11 @@ def save_payment_from_cart(request):
                     imp_uid = imp_uid, 
                     merchant_uid = merchant_uid
                 )
+        
+        # 카트 아이템 삭제
+        for item in cart_items:
+            item.delete()
+            
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
 def order_success(request):
