@@ -27,7 +27,7 @@
                 <div class="carousel-inner">
                     {% for product_img in product_imgs %}
                     <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                        <img src="{% static 'example/소고기스테이크.png' %}" class="d-block w-100" alt="Product Image">
+                        <img src="{{ product_img.image_url }}" class="d-block w-100" alt="Product Image">
                     </div>
                     {% endfor %}
                 </div>

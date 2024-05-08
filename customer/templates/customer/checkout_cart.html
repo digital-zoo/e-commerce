@@ -66,7 +66,9 @@
             <div class="order-items">
                 <div class="row mb-3">
                     <div class="col-md-2">
-                        <img src="{% static 'example/소고기스테이크.png' %}" style="width: 100px;" alt="{{ item.product.product_name }}" class="img-fluid">
+                        {% for img in item.product_imgs %}
+                        <img src="{{ img.image_url }}" style="width: 100px;" alt="{{ item.product.product_name }}" class="img-fluid">
+                        {% endfor %}
                     </div>
                     <div class="col-md-6 align-self-center">
                         <h4><a href="{% url 'customer:product_detail' product_id=item.product.product_id %}">{{ item.product.product_name }}</a></h4>
@@ -75,7 +77,11 @@
                 </div>
                 <div class="row mb-3">
                     <p><a href="#">상품 판매자: {{ item.product.seller }}</a></p>
-                    <p>총 가격: {{  item.discounted_price|mul:item.quantity|floatformat:"0" }}원 <span class="text-decoration-line-through text-secondary">{{ item.product.price|mul:item.quantity }}원</span></p>
+                    {% if item.product.discount_rate %}
+                    <p class="price mb-1 fs-4"> 총 가격: {{ item.discounted_price|mul:item.quantity|floatformat:"0" }}원 <span class="text-decoration-line-through text-secondary">   {{ item.product.price|mul:item.quantity }}원</span></p>
+                    {% else %}  
+                    <p class="price mb-0 fs-4">총 가격: {{ item.product.price|mul:item.quantity }}원</span></p>
+                    {% endif %}
                 </div>
             </div>
         </div>
