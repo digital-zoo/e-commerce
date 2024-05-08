@@ -204,6 +204,9 @@ def seller_login_view(request):
         return render(request, 'seller/seller_login.html')
 
 def seller_mypage_view(request):
+    # context = {
+    #     'show_sorted_options': False,        
+    # }
     return render(request,"seller/seller_mypage.html")
 
 def seller_logout_view(request):
