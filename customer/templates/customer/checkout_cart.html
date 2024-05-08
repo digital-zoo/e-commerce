@@ -4,117 +4,113 @@
 {% block sorted_by %}
 {% endblock %}
 {% block content %}
-
-
-
+&nbsp;
 <h1>주문서</h1>
 구매자 : {{ user.customer_name }}
 <p>결제명세서는 {{user.email}}로 발송됩니다.</p>
-    <div class="shipping-info">
-        <div class="row mb-3">
-            <br>
-            <div class="col-sm-6">
-                <h2>배송 정보</h2>
-            </div>
-            <div class="col">
-                <button type="button" class="btn btn-secondary float-end">배송지 목록</button>
-            </div>
+<br>
+<div class="shipping-info">
+    <div class="row mb-3">
+        <br>
+        <div class="col-sm-6">
+            <h2>배송 정보</h2>
         </div>
-        <div class="card">
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-sm-4">
-                        <label for="postal_code">우편번호</label>
-                        <input type="text" readonly id="postal_code" name="postal_code" class="form-control" required style="background-color: #f2f2f2;">
-                    </div>
-                    <div class="col-sm-2">
-                        <label for="postal_code_find"></label>
-                        <input type="button" onclick="execDaumPostcode()" value="우편번호 찾기" class="btn btn-primary form-control">
-                    </div>
-                </div>
-                <div>
-                <div class="row mb-3">
-                    <div class="col-sm-6">
-                        <label for="shipping_address">주소</label>
-                        <input type="text" readonly id="shipping_address" name="shipping_address" class="form-control" required style="background-color: #f2f2f2;">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-sm-12">
-                        <label for="shipping_address_detail">상세 주소</label>
-                        <input type="text" id="shipping_address_detail" name="shipping_address_detail" class="form-control" required>
-                    </div>
-                </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-sm-6">
-                        <label for="recipient">수령인</label>
-                        <input type="text" id="recipient" name="recipient" class="form-control" required>
-                    </div>
-                    <div class="col-sm-6">
-                        <label for="recipient_phone_number">수령인 연락처</label>
-                        <input type="text" id="recipient_phone_number" name="recipient_phone_number" class="form-control" required>
-                        <small id="phoneError" class="text-danger"></small>
-                    </div>
-                </div>
-            </div>
+        <div class="col">
+            <button type="button" class="btn btn-secondary float-end">배송지 목록</button>
         </div>
     </div>
-    <br><br>
-
-    <h2 >주문 상품</h2><br>
-    {% for item in cart_items %}
-    <div class="card mb-3">
+    <div class="card">
         <div class="card-body">
-            <div class="order-items">
-                <div class="row mb-3">
-                    <div class="col-md-2">
-                        {% for img in item.product_imgs %}
-                        <img src="{{ img.image_url }}" style="width: 100px;" alt="{{ item.product.product_name }}" class="img-fluid">
-                        {% endfor %}
-                    </div>
-                    <div class="col-md-6 align-self-center">
-                        <h4><a href="{% url 'customer:product_detail' product_id=item.product.product_id %}">{{ item.product.product_name }}</a></h4>
-                        <p>{{ item.quantity }} 개</p>
-                    </div>
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <label for="postal_code">우편번호</label>
+                    <input type="text" readonly id="postal_code" name="postal_code" class="form-control" required style="background-color: #f2f2f2;">
                 </div>
-                <div class="row mb-3">
-                    <p><a href="#">상품 판매자: {{ item.product.seller }}</a></p>
-                    {% if item.product.discount_rate %}
-                    <p class="price mb-1 fs-4"> 총 가격: {{ item.discounted_price|mul:item.quantity|floatformat:"0" }}원 <span class="text-decoration-line-through text-secondary">   {{ item.product.price|mul:item.quantity }}원</span></p>
-                    {% else %}  
-                    <p class="price mb-0 fs-4">총 가격: {{ item.product.price|mul:item.quantity }}원</span></p>
-                    {% endif %}
+                <div class="col-sm-2">
+                    <label for="postal_code_find"></label>
+                    <input type="button" onclick="execDaumPostcode()" value="우편번호 찾기" class="btn btn-primary form-control">
+                </div>
+            </div>
+            <div>
+            <div class="row mb-3">
+                <div class="col-sm-6">
+                    <label for="shipping_address">주소</label>
+                    <input type="text" readonly id="shipping_address" name="shipping_address" class="form-control" required style="background-color: #f2f2f2;">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-12">
+                    <label for="shipping_address_detail">상세 주소</label>
+                    <input type="text" id="shipping_address_detail" name="shipping_address_detail" class="form-control" required>
+                </div>
+            </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-6">
+                    <label for="recipient">수령인</label>
+                    <input type="text" id="recipient" name="recipient" class="form-control" required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="recipient_phone_number">수령인 연락처</label>
+                    <input type="text" id="recipient_phone_number" name="recipient_phone_number" class="form-control" required>
+                    <small id="phoneError" class="text-danger"></small>
                 </div>
             </div>
         </div>
     </div>
-    {% endfor %}
+</div>
+<br><br>
 
-
-
-    <br>
-    <h2>결제</h2>
-    <div class="total-price">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-text">총 상품 금액 <span class="float-end">{{ total_original_final_price|floatformat:"0" }}원</span></h4>
-                <h4 class="card-text">총 할인 금액 <span class="float-end">-{{ total_saved_price|floatformat:"0" }}원</span></h4>
-                <h3 class="card-text">총 결제 금액 <span class="float-end">{{ total_final_price|floatformat:"0" }}원</span></h3>
+<h2 >주문 상품</h2><br>
+{% for item in cart_items %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="order-items">
+            <div class="row mb-3">
+                <div class="col-md-2">
+                    <img src="{{ item.product.images.all.0.image_url }}" style="width: 100px;" alt="{{ item.product.product_name }}" class="img-fluid">
+                </div>
+                <div class="col-md-6 align-self-center">
+                    <h4><a href="{% url 'customer:product_detail' product_id=item.product.product_id %}">{{ item.product.product_name }}</a></h4>
+                    <p>{{ item.quantity }} 개</p>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <p><a href="#">상품 판매자: {{ item.product.seller }}</a></p>
+                {% if item.product.discount_rate %}
+                <p class="price mb-1 fs-4"> 총 가격: {{ item.discounted_price|mul:item.quantity|floatformat:"0" }}원 <span class="text-decoration-line-through text-secondary">   {{ item.product.price|mul:item.quantity }}원</span></p>
+                {% else %}  
+                <p class="price mb-0 fs-4">총 가격: {{ item.product.price|mul:item.quantity }}원</span></p>
+                {% endif %}
             </div>
         </div>
     </div>
-    <br>
-    <h2>결제 수단</h2>
-    <div class="payment-method">
-        <select id="payment_method" name="payment_method" class="form-select" required>
-            <option value="card">카드결제</option>
-            <!-- <option value="bank_transfer">계좌이체</option>
-            <option value="cash">현금결제</option> -->
-        </select>
+</div>
+{% endfor %}
+
+<br>
+<h2>결제</h2>
+<div class="total-price">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-text">총 상품 금액 <span class="float-end">{{ total_original_final_price|floatformat:"0" }}원</span></h4>
+            <h4 class="card-text">총 할인 금액 <span class="float-end">-{{ total_saved_price|floatformat:"0" }}원</span></h4>
+            <h3 class="card-text">총 결제 금액 <span class="float-end">{{ total_final_price|floatformat:"0" }}원</span></h3>
+        </div>
     </div>
-    <br>
-    <button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제하기</button>
+</div>
+
+<br>
+<h2>결제 수단</h2>
+<div class="payment-method">
+    <select id="payment_method" name="payment_method" class="form-select" required>
+        <option value="card">카드결제</option>
+        <!-- <option value="bank_transfer">계좌이체</option>
+        <option value="cash">현금결제</option> -->
+    </select>
+</div>
+<br>
+<button type="submit" onclick="requestPay()" class="btn btn-primary mt-3">결제하기</button>
 
 <script>
     // 로그인한 구매자 정보를 기본 배송정보로 설정  
@@ -124,7 +120,7 @@
     document.getElementById('recipient_phone_number').value = '{{ user.phone_number }}'; // 사용자 주소 자동 채움
 </script>
 
-<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
     // 검색한 주소 적용    
     function execDaumPostcode() {
@@ -173,7 +169,6 @@
             shipping_address_detail: $('#shipping_address_detail').val(), // 상세 주소
             recipient: $('#recipient').val(), // 수령인
             recipient_phone_number: $('#recipient_phone_number').val(), // 수령인 전화번호
-            cart_items: "{{ cart_items|safe }}", // 카트 아이템들
             payment_method: $('#payment_method').val() // 결제 수단
         },
         success: function(data) {
@@ -208,7 +203,7 @@
                             dataType: "json",
                             data : {
                                 csrfmiddlewaretoken : window.CSRF_TOKEN, // CSRF 토큰 추가
-                                order_id: data.order_id,
+                                order_id: data.order_id, //주문 아이디
                                 imp_uid: response.imp_uid, // 결제 상점
                                 merchant_uid: response.merchant_uid, // 결제 번호
                                 paid_amount: response.paid_amount, // 실제 지불한 금액
@@ -272,6 +267,5 @@
         }
     });
 }
-
 </script>
 {% endblock %}

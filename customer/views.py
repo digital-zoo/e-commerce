@@ -24,8 +24,7 @@ class CategoryList(ListView):
     def get_queryset(self):
         product_queryset = Product.objects.all()
         category_queryset = Category.objects.all()
-        return list(product_queryset) + list(category_queryset)
-    
+        return list(product_queryset) + list(category_queryset)    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -407,51 +406,7 @@ def delete_customer_view(request):
 
     return redirect("customer:login")
 
-# 수정본 # 카트 연동 구매용
-@login_required
-def cart_checkout(request):
-    if request.method == 'GET': # 페이지 로딩시
-        # 구매자 정보 불러오기
-        user = request.user
-        # 카트 불러오기
-        cart = Cart.objects.get(customer=user)
-        # 카트 아이템 불러오기
-        cart_items = CartItem.objects.filter(cart=cart)
-
-        # 각 카트 아이템의 가격 정보를 계산하여 리스트에 저장
-        cart_items_info = []
-        total_final_price = 0
-        total_original_final_price = 0
-        for item in cart_items:
-            # 상품 하나의 할인된 가격
-            discounted_price = item.product.price * (1 - item.product.discount_rate)
-            # 할인된 해당 상품의, 상품 개수에 따른 총 가격
-            final_price = discounted_price * item.quantity
-            # 할인 되지 않은 해당 상품의, 상품 개수에 따른 총 가격 
-            original_final_price = item.product.price * item.quantity
-            # 상품에 대한 이미지들을 가져오기
-            product_imgs = ProductImage.objects.filter(product = item.product)
-            cart_items_info.append({
-                'product': item.product,
-                'quantity': item.quantity,
-                'discounted_price': discounted_price,
-                'final_price': final_price,
-                'product_imgs': product_imgs,
-            })
-            total_final_price += final_price
-            total_original_final_price += original_final_price
-        total_saved_price = total_original_final_price - total_final_price
-
-        context = {
-            'user': user,
-            'cart_items': cart_items_info,
-            'total_final_price': total_final_price,
-            'total_original_final_price': total_original_final_price,
-            'total_saved_price': total_saved_price,
-        }
-        return render(request, 'customer/checkout_cart.html', context)
-    
-
+# 바로결제하기
 @login_required
 def quick_checkout(request):
     if request.method == 'GET': # 페이지 로딩시
@@ -460,13 +415,13 @@ def quick_checkout(request):
         # 선택한 상품 불러오기
         product_id = request.GET.get('product_id')
         product = Product.objects.get(product_id=product_id)
-        # 상품에 대한 이미지들을 가져오기
-        product_imgs = ProductImage.objects.filter(product = product)
         # 선택한 상품 수량 불러오기
         quantity = request.GET.get('quantity')
         # 가격 계산하기
         discounted_price = product.price * (1-product.discount_rate)
         final_price = discounted_price * int(quantity)
+        original_final_price = product.price * int(quantity)
+        saved_price = original_final_price - final_price
 
         context = {
         'user' : user,
@@ -474,7 +429,8 @@ def quick_checkout(request):
         'quantity': quantity,
         'discounted_price' : discounted_price,
         'final_price' : final_price,
-        'product_imgs': product_imgs,
+        'original_final_price' : original_final_price,
+        'saved_price' : saved_price,
         }
         return render(request, 'customer/checkout.html', context)
     
@@ -532,7 +488,6 @@ def save_order(request):
 @transaction.atomic
 def save_payment(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
-        print("post 호출됨(save_payment)")
         # 선택한 상품 id 불러오기
         product_id = request.POST.get('product_id')
         # 선택한 상품 수량 불러오기
@@ -557,78 +512,82 @@ def save_payment(request):
 
         imp_uid = request.POST.get('imp_uid')
         merchant_uid = request.POST.get('merchant_uid')
-        paid_amount = request.POST.get('paid_amount')
+        # paid_amount = request.POST.get('paid_amount') # 실제로 결제된 금액(현재 100원)
+        final_price_str = request.POST.get('final_price') # 결제 금액
+        paid_amount = int(float(final_price_str))  # 숫자로 변환
 
-        # #DB 백업 -> DB에 Payment 테이블 생성 후 사용가능
-        # Payment.objects.create(
-        #             order = order,
-        #             paid_amount = paid_amount, 
-        #             imp_uid = imp_uid, 
-        #             merchant_uid = merchant_uid
-        #         )
+        # 결제 내역 저장
+        Payment.objects.create(
+                    order = order,
+                    paid_amount = paid_amount, 
+                    imp_uid = imp_uid, 
+                    merchant_uid = merchant_uid
+                )
+        
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
-def order_success(request):
-    # 결제가 된 주문 가져오기
-    order_id = request.GET.get('order_id')
-    order = Order.objects.get(order_id=order_id)   
-    order_items = OrderItem.objects.filter(order = order)
-    # payment = Payment.objects.get(order=order)
-        
-    context={
-        'order' : order,
-        'order_items' : order_items,
-        # 'payment' : payment
+# 장바구니 결제하기
+@login_required
+def cart_checkout(request):
+    if request.method == 'GET': # 페이지 로딩시
+        # 구매자 정보 불러오기
+        user = request.user
+        # 카트 불러오기
+        cart = Cart.objects.get(customer=user)
+        # 카트 아이템 불러오기
+        cart_items = CartItem.objects.filter(cart=cart)
+
+        # 각 카트 아이템의 가격 정보를 계산하여 리스트에 저장
+        cart_items_info = []
+        total_final_price = 0
+        total_original_final_price = 0
+        for item in cart_items:
+            # 상품 하나의 할인된 가격
+            discounted_price = item.product.price * (1 - item.product.discount_rate)
+            # 할인된 해당 상품의, 상품 개수에 따른 총 가격
+            final_price = discounted_price * item.quantity
+            # 할인 되지 않은 해당 상품의, 상품 개수에 따른 총 가격 
+            original_final_price = item.product.price * item.quantity
+            cart_items_info.append({
+                'product': item.product,
+                'quantity': item.quantity,
+                'discounted_price': discounted_price,
+                'final_price': final_price,
+            })
+            total_final_price += final_price
+            total_original_final_price += original_final_price
+        total_saved_price = total_original_final_price - total_final_price
+
+        context = {
+            'user': user,
+            'cart_items': cart_items_info,
+            'total_final_price': total_final_price,
+            'total_original_final_price': total_original_final_price,
+            'total_saved_price': total_saved_price,
         }
-
-    return render(request, 'customer/order_confirmation.html', context)
-
-def order_fail(request):
-    if request.method == 'POST':
-        # 수정할 order가져오기
-        order_id = request.POST.get('order_id')
-        order_status = request.POST.get('order_status')
-        err_message = request.POST.get('err_message')
-        # order_status 수정하기
-        order = Order.objects.get(order_id=order_id)
-        order.order_status = order_status
-        order.save()
-        # 사용자에게 안내할 메세지
-        context={
-            'message' : err_message,
-            }
-        return render(request, 'customer/order_fail.html', context)
+        return render(request, 'customer/checkout_cart.html', context)
     
-    # if request.method == 'GET':
-    #     context={
-    #         'message' : '결제과정에서 문제가 생겼습니다.',
-    #         }
-    #     return render(request, 'customer/order_fail.html', context)
-
-# 카트 주문 정보
 @login_required
 @transaction.atomic
 def save_order_from_cart(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
         # 구매자 정보 불러오기
         user = request.user
-        # 카트 아이템들을 가져오기 
-        # JSON 형식의 문자열을 Python 객체로 변환 -> 일반적으로 cart.id만 가져와서 여기서 모두 DB에서 직접가져오는게 더 나을수도 있음. 더 일반적
-        cart_items_json = request.POST.get('cart_items')
-        cart_items = json.loads(cart_items_json)
+        # 카트 불러오기
+        cart = Cart.objects.get(customer=user)
+        # 카트 아이템 불러오기
+        cart_items = CartItem.objects.filter(cart=cart)
         
         # 데이터베이스에서 가져온 제품 정보를 모아둘 리스트 생성
         product_list = []
         # 제품 재고 확인
         for item in cart_items:
-            # 각 아이템에서 product 정보를 가져옴
-            product_id = item['product']
-            quantity = item['quantity']
-            product = Product.objects.get(product_id=product_id) # 데이터베이스에서 새로 가져옴, 최신값 확인
-            if product.stock >= int(quantity): # 재고가 충분한지 확인
-                product_list.append((product, int(quantity)))
-                # 또는 pass 후 아래서 다시 product를 DB에서 가져옴 (이후에 성능 비교로 결정)
-            else:
+            product = Product.objects.get(product_id=item.product.product_id) # 데이터베이스에서 새로 가져옴, 최신값 확인
+            # 선택한 모든 상품의 재고가 충분할 때
+            if product.stock >= int(item.quantity): # 재고가 충분한지 확인
+                product_list.append((product, int(item.quantity)))
+                # 또는 pass 후 아래서 다시 product를 DB에서 가져옴 (배열 계산이 디비서버 통신보다 빠를것으로 예상)
+            else: # 일부 상품이라도 재고가 부족할 때
                 return JsonResponse({'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다'})
         
         # 배송 정보 불러오기
@@ -667,21 +626,26 @@ def save_order_from_cart(request):
 @transaction.atomic
 def save_payment_from_cart(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
-        # 카트 아이템들을 가져오기
-        cart_items = request.POST.get('cart_items')
+        # 구매자 정보 불러오기
+        user = request.user
+        # 카트 불러오기
+        cart = Cart.objects.get(customer=user)
+        # 카트 아이템 불러오기
+        cart_items = CartItem.objects.filter(cart=cart)
         # 결제가 된 주문 가져오기
         order_id = request.POST.get('order_id')
         order = Order.objects.get(order_id=order_id)
-        
+
         # 변경사항을 모아둘 리스트 생성
         stock_updates = []
         # 제품 재고 변경 # 동시성처리
         for item in cart_items:
+            # 상품들 락 설정
             product_udt = Product.objects.select_for_update(nowait=False).get(product_id=item.product.product_id) # 데이터베이스에서 새로 가져옴, 최신값 확인
+            # 주문하는 모든 상품의 재고가 충분할 때
             if product_udt.stock >= int(item.quantity): # 재고가 충분한지 확인
                 stock_updates.append((product_udt, int(item.quantity)))
-            else:
-                # 재고 부족
+            else: # 일부 상품의 재고가 부족할 때
                 order.order_status = '환불대기'
                 order.save()
                 return JsonResponse({'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다. 영업일 2일 이내로 환불을 도와드리겠습니다.'}) 
@@ -696,14 +660,46 @@ def save_payment_from_cart(request):
 
         imp_uid = request.POST.get('imp_uid')
         merchant_uid = request.POST.get('merchant_uid')
-        paid_amount = request.POST.get('paid_amount') # 실제 결제된 금액(100원)
-        total_final_price = request.POST.get('total_final_price') # 디베에 저장할 결제 예정 금액
+        # paid_amount = request.POST.get('paid_amount') # 실제로 결제된 금액(현재 100원)
+        total_final_price_str = request.POST.get('total_final_price') # 결제 금액
+        paid_amount = int(float(total_final_price_str))  # 숫자로 변환
 
-        # #DB 백업 -> DB에 Payment 테이블 생성 후 사용가능
-        # Payment.objects.create(
-        #             order = order,
-        #             paid_amount = total_final_price, 
-        #             imp_uid = imp_uid, 
-        #             merchant_uid = merchant_uid
-        #         )
+        # 결제 내역 저장
+        Payment.objects.create(
+                    order = order,
+                    paid_amount = paid_amount, 
+                    imp_uid = imp_uid, 
+                    merchant_uid = merchant_uid
+                )
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
+
+def order_success(request):
+    # 결제가 된 주문 가져오기
+    order_id = request.GET.get('order_id')
+    order = Order.objects.get(order_id=order_id)   
+    order_items = OrderItem.objects.filter(order = order)
+    payment = Payment.objects.get(order=order)
+        
+    context={
+        'order' : order,
+        'order_items' : order_items,
+        'payment' : payment
+        }
+
+    return render(request, 'customer/order_confirmation.html', context)
+
+def order_fail(request):
+    if request.method == 'POST':
+        # 수정할 order가져오기
+        order_id = request.POST.get('order_id')
+        order_status = request.POST.get('order_status')
+        err_message = request.POST.get('err_message')
+        # order_status 수정하기
+        order = Order.objects.get(order_id=order_id)
+        order.order_status = order_status
+        order.save()
+        # 사용자에게 안내할 메세지
+        context={
+            'message' : err_message,
+            }
+        return render(request, 'customer/order_fail.html', context)
