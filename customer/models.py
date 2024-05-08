@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth import get_user_model
 
-# 멤버쉽 테이블
+# 멤버쉽 테이블\\
 class Membership(models.Model):
     membership_id = models.IntegerField(primary_key=True)
     grade = models.CharField(max_length=255,unique=True)
@@ -76,7 +77,7 @@ class Customer(MyUser):
     customer_name = models.CharField(max_length=255)    
     address = models.CharField(max_length=255, null=True)
     postal_code = models.CharField(max_length=255, null=True)
-    is_snsid = models.BooleanField()
+    is_snsid = models.BooleanField(default=False)
     is_advertise = models.BooleanField(default=False) # 광고 동의 여부
 
 # 카트 테이블
@@ -116,6 +117,15 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return str(self.orderitem_id)
+    
+class Payment(models.Model):
+    payment_id = models.AutoField(primary_key=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    paid_amount = models.IntegerField(default=0)
+    imp_uid = models.CharField(max_length=100)
+    merchant_uid = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 
 class Like(models.Model):
     like_id = models.AutoField(primary_key=True)

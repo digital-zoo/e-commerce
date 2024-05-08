@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% if user.is_authenticated and user.customer_name is not none%}
+    <br>
+    <h3>구매자 회원가입은 구매자 로그인 상태로 불가</h3>
+{% else %}
     <br>
     <h2>회원가입</h2>
     <br>
@@ -9,4 +13,5 @@
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary mb-2">가입하기</button>
     </form>    
+{% endif %}
 {% endblock %}

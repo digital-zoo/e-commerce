@@ -1,0 +1,53 @@
+{{object}}
+
+<div>
+    <a href="{% url 'seller:add_product' %}" class="btn btn-primary">제품 등록</a>
+</div>
+
+<div>
+    <a href="{% url 'seller:order_manage' %}" class="btn btn-primary">주문 관리</a>
+</div>
+
+
+
+{% block content %}
+
+<h1>등록된 상품 목록</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>상품 ID</th>
+            <th>판매자</th>
+            <th>카테고리</th>
+            <th>상품 이름</th>
+            <th>가격</th>
+            <th>썸네일 이미지</th>
+            <th>수정</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.product_id }}</td>
+            <td>{{ product.seller.username }}</td>  
+            <td>{{ product.category.category_name }}</td>  
+            <td>{{ product.product_name }}</td>
+            <td>{{ product.price }}</td>
+            <td>              
+              {% if product.images.exists %}
+                  <img src="{{ product.images.first.image_url|default:'static/images/noimage.jpg' }}" alt="{{ product.product_name }}" width="100" height="100">
+              {% else %}
+                  <img src="{{ 'static/images/noimage.jpg' }}" alt="이미지가 없습니다" width="100" height="100">
+              {% endif %}
+          </td>
+          <td>            
+            <a href="{% url 'seller:edit_product' product.pk %}" class="btn btn-primary btn-sm">수정</a>
+
+          </td>            
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
