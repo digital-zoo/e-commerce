@@ -532,7 +532,6 @@ def save_order(request):
 @transaction.atomic
 def save_payment(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
-        print("post 호출됨(save_payment)")
         # 선택한 상품 id 불러오기
         product_id = request.POST.get('product_id')
         # 선택한 상품 수량 불러오기
@@ -557,15 +556,18 @@ def save_payment(request):
 
         imp_uid = request.POST.get('imp_uid')
         merchant_uid = request.POST.get('merchant_uid')
-        paid_amount = request.POST.get('paid_amount')
+        # paid_amount = request.POST.get('paid_amount') # 실제로 결제된 금액(현재 100원)
+        final_price_str = request.POST.get('final_price') # 결제 금액
+        paid_amount = int(float(final_price_str))  # 숫자로 변환
 
-        # #DB 백업 -> DB에 Payment 테이블 생성 후 사용가능
-        # Payment.objects.create(
-        #             order = order,
-        #             paid_amount = paid_amount, 
-        #             imp_uid = imp_uid, 
-        #             merchant_uid = merchant_uid
-        #         )
+        # 결제 내역 저장
+        Payment.objects.create(
+                    order = order,
+                    paid_amount = paid_amount, 
+                    imp_uid = imp_uid, 
+                    merchant_uid = merchant_uid
+                )
+        
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
 def order_success(request):
