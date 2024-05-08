@@ -52,7 +52,7 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
     is_staff = models.BooleanField(default=False)  # 관리자 사이트 접근 권한
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email','phone_number'] #superusercreate할 때 email,phone_number 필요
+    REQUIRED_FIELDS = ['email'] #superusercreate할 때 email,phone_number 필요
 
     objects = MyUserManager()
 
