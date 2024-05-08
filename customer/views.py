@@ -429,14 +429,11 @@ def cart_checkout(request):
             final_price = discounted_price * item.quantity
             # 할인 되지 않은 해당 상품의, 상품 개수에 따른 총 가격 
             original_final_price = item.product.price * item.quantity
-            # 상품에 대한 이미지들을 가져오기
-            product_imgs = ProductImage.objects.filter(product = item.product)
             cart_items_info.append({
                 'product': item.product,
                 'quantity': item.quantity,
                 'discounted_price': discounted_price,
                 'final_price': final_price,
-                'product_imgs': product_imgs,
             })
             total_final_price += final_price
             total_original_final_price += original_final_price
@@ -460,8 +457,6 @@ def quick_checkout(request):
         # 선택한 상품 불러오기
         product_id = request.GET.get('product_id')
         product = Product.objects.get(product_id=product_id)
-        # 상품에 대한 이미지들을 가져오기
-        product_imgs = ProductImage.objects.filter(product = product)
         # 선택한 상품 수량 불러오기
         quantity = request.GET.get('quantity')
         # 가격 계산하기
@@ -474,7 +469,6 @@ def quick_checkout(request):
         'quantity': quantity,
         'discounted_price' : discounted_price,
         'final_price' : final_price,
-        'product_imgs': product_imgs,
         }
         return render(request, 'customer/checkout.html', context)
     

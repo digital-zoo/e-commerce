@@ -66,9 +66,7 @@
             <div class="order-items">
                 <div class="row mb-3">
                     <div class="col-md-2">
-                        {% for img in item.product_imgs %}
-                        <img src="{{ img.image_url }}" style="width: 100px;" alt="{{ item.product.product_name }}" class="img-fluid">
-                        {% endfor %}
+                        <img src="{{ item.product.images.all.0.image_url }}" style="width: 100px;" alt="{{ item.product.product_name }}" class="img-fluid">
                     </div>
                     <div class="col-md-6 align-self-center">
                         <h4><a href="{% url 'customer:product_detail' product_id=item.product.product_id %}">{{ item.product.product_name }}</a></h4>
