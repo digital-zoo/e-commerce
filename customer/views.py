@@ -708,3 +708,6 @@ def order_fail(request):
             'message' : err_message,
             }
         return render(request, 'customer/order_fail.html', context)
+    
+def my_shopping_list(request):
+    return render(request,"customer/my_shopping.html")

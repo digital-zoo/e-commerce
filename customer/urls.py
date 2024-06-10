@@ -29,6 +29,8 @@ urlpatterns = [
     path('mypage/profile_edit/', profile_edit_view, name='profile_edit'),
     path('mypage/delete_customer/', delete_customer_view, name='delete_customer'),   
 
+    path('mypage/my_shopping/', my_shopping_list, name='my_shopping_list'),   
+
     path('<int:category_id>/', CategoryList.as_view(),name='category_list'),#선택된 카테고리 보기
     path('<str:sorted_by>/', SortedList.as_view() ,name='sorted_list'),#기준에 따라 정렬
     path('<int:category_id>/<str:sorted_by>/', CategorySortedList.as_view() ,name='category_sorted_list'),#선택된 카테고리에서 기준에 따라 정렬
