@@ -125,6 +125,8 @@ def search_product(request):
             product_list = []
         return render(request, 'customer/search.html', {'products': product_list, 'search_word': search_word})  
 
+################################################## 장바구니
+
 # 장바구니 상세 페이지 처리    
 def cart(request, pk):
     cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
@@ -154,20 +156,54 @@ def cart(request, pk):
         }
         return render(request, 'customer/cart_list.html', context)
 
-# 장바구기에 아이템 추가하는 메서드
+from .forms import CartItemForm # 폼을 활용한 데이터 유효성 검사
+
 def add_to_cart(request):
-    if request.user.is_authenticated: # 로그인한 유저
+    if request.user.is_authenticated:
         user = request.user
-        product_id = request.POST['product_id']
-        product = Product.objects.get(product_id=product_id)
+        product_id = request.POST.get('product_id')
+
+        form = CartItemForm(request.POST) # 클라이언트에서 전송한 POST 데이터를 생성한 CartItemForm에 바인딩
+        if form.is_valid(): # 해당 인스턴스가 유효하다면 즉, validators 매개변수에서 지정한 검사를 통과했다면
+            quantity = form.cleaned_data['quantity']
+            product = Product.objects.get(product_id=product_id)
+            cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
+            cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity': 0})
+            cartitem.quantity += quantity
+            cartitem.save()
+
+            return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+        else: # 통과하지 못했다면 즉, 1 이하의 갯수를 클라이언트에서 보냈다면
+            return JsonResponse({'message': form.errors['quantity'][0]}, status=400)
+
+# def add_to_cart(request):
+#     if request.user.is_authenticated:
+#         user = request.user
+#         product_id = request.POST.get('product_id')
+#         quantity = request.POST.get('quantity')
+
+#         # 수량 값 유효성 검사 try-except 구문 사용
+#         try:
+#             quantity = int(quantity)
+#             if quantity < 1:
+#                 return JsonResponse({'message': '유효하지 않은 수량입니다.'}, status=400)
+#         except ValueError:
+#             return JsonResponse({'message': '유효하지 않은 수량입니다.'}, status=400)
         
-        cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
-        cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity':0})
-        cartitem.quantity += int(request.POST['quantity'])
-        cartitem.save()
-        
-        return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
-    
+#         # # 수량 값 유효성 검사 단순 if 문 사용
+#         # if not quantity_str.isdigit() or int(quantity_str) < 1:
+#         #     return JsonResponse({'message': '유효하지 않은 수량입니다.'}, status=400)
+
+#         product = Product.objects.get(product_id=product_id)
+#         cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
+#         cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity': 0})
+#         cartitem.quantity += quantity
+#         cartitem.save()
+
+#         return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+
+
+
     # else: # 로그인x 유저
     #     #cart = request.session.get('cart', {})
     #     product_id = request.POST['product_id']
@@ -269,6 +305,8 @@ def guest_cart(request):
         product.quantity = cart[str(product.id)]
     
     return render(request, 'customer/cart.html', {'products': products})
+
+############################################################################
 
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate,login,logout

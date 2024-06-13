@@ -31,3 +31,9 @@ class SignupForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+from django import forms
+from django.core.validators import MinValueValidator
+
+class CartItemForm(forms.Form):
+    quantity = forms.IntegerField(validators=[MinValueValidator(1)])
