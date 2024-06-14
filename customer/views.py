@@ -680,6 +680,9 @@ def save_payment_from_cart(request):
 
 def order_success(request):
     # 결제가 된 주문 가져오기
+
+    # 수정할 사항 : user 정보 넣어야함. 내것만 확인가능하도록
+
     order_id = request.GET.get('order_id')
     order = Order.objects.get(order_id=order_id)   
     order_items = OrderItem.objects.filter(order = order)
@@ -710,4 +713,13 @@ def order_fail(request):
         return render(request, 'customer/order_fail.html', context)
     
 def my_shopping_list(request):
-    return render(request,"customer/my_shopping.html")
+    if request.method == 'GET':
+        # 구매자 정보 불러오기
+        user = request.user
+        # 구매자의 모든 주문 가져오기
+        order = Order.objects.filter(customer=user)
+
+        context={
+            'orders' : order,
+            }
+        return render(request,"customer/my_shopping.html")
