@@ -2,12 +2,21 @@ from django.db import models
 from customer.models import MyUser
 from django.utils import timezone
 # from django.contrib.auth.models import BaseUserManager
+from customer.models import MyUser
+from django.contrib.auth.models import Group, Permission
 
 # Myuser 상속받아서 seller 테이블 생성    
 class Seller(MyUser):    
-    company_name = models.CharField(max_length=255)    
-    business_contact = models.CharField(max_length=255,unique=True,null=True)
-    registration_number = models.CharField(max_length=255,unique=True)
+    company_name = models.CharField(max_length=50)    
+    business_contact = models.CharField(max_length=50,unique=True,null=True)
+    registration_number = models.CharField(max_length=50,unique=True)
+
+    groups = models.ManyToManyField(Group, related_name='seller_set', blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name='seller_permissions_set', blank=True)
+
+    class Meta:
+        verbose_name = 'Seller'
+        verbose_name_plural = 'Sellers'
 
 class Category(models.Model):
     category_id = models.AutoField(primary_key=True)

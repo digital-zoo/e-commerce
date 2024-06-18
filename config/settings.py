@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'customer',
     'seller',
     'widget_tweaks', # 로그인 기능 구현을 위한 
+    'myuser', # 공통 추상 테이블 전용
 ]
 
 MIDDLEWARE = [
