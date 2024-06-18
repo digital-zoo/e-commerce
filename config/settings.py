@@ -74,7 +74,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'digital_zoo_pj_2',
+        'NAME': 'digital_zoo_pj_3',
         'USER': 'postgres',
         'PASSWORD': db_password,
         'HOST': 'hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소
