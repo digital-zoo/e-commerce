@@ -43,7 +43,8 @@ class CartItem(models.Model):
     
 class Order(models.Model):
     order_id = models.AutoField(primary_key=True) 
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)  # 고객 삭제 시 null로 설정
+    customer_id = models.IntegerField()  # 고객 ID를 직접 저장
     order_date = models.DateField()
     order_status = models.CharField(max_length=50)
     shipping_address = models.CharField(max_length=300)
@@ -51,18 +52,32 @@ class Order(models.Model):
     recipient = models.CharField(max_length=100)
     recipient_phone_number = models.CharField(max_length=20)
     payment_method = models.CharField(max_length=20)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return str(self.order_id)
 
+    def save(self, *args, **kwargs):
+        if self.customer:
+            self.customer_id = self.customer.id  # 고객 ID 저장
+        super(Order, self).save(*args, **kwargs)
+
 class OrderItem(models.Model):
     orderitem_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
+    product = models.ForeignKey('seller.Product', on_delete=models.SET_NULL, null=True)  # 상품 삭제 시 null로 설정
+    product_name = models.CharField(max_length=100)  # 주문 당시의 상품 이름을 저장
+    product_price = models.DecimalField(max_digits=10, decimal_places=2)  # 주문 당시의 상품 가격을 저장
     quantity = models.IntegerField() 
 
     def __str__(self):
         return str(self.orderitem_id)
+
+    def save(self, *args, **kwargs):
+        if self.product:
+            self.product_name = self.product.product_name
+            self.product_price = self.product.price
+        super(OrderItem, self).save(*args, **kwargs)
     
 class Payment(models.Model):
     payment_id = models.AutoField(primary_key=True)
@@ -93,8 +108,14 @@ class ShippingAddress(models.Model):
 
 class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)  # 고객 삭제 시 null로 설정
+    customer_id = models.IntegerField()  # 고객 ID를 직접 저장
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     content = models.TextField()
     rating = models.IntegerField(default=5)
-    created_at = models.DateTimeField(auto_now_add=True)    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.customer:
+            self.customer_id = self.customer.id  # 고객 ID 저장
+        super(Review, self).save(*args, **kwargs)
