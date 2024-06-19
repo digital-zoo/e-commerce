@@ -157,9 +157,10 @@ def cart(request, pk):
         return render(request, 'customer/cart_list.html', context)
 
 from .forms import CartItemForm # 폼을 활용한 데이터 유효성 검사
+from datetime import datetime, timedelta
 
 def add_to_cart(request):
-    if request.user.is_authenticated:
+    if request.user.is_authenticated: # 로그인 유저 장바구니 추가
         user = request.user
         product_id = request.POST.get('product_id')
 
@@ -175,7 +176,31 @@ def add_to_cart(request):
             return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
         else: # 통과하지 못했다면 즉, 1 이하의 갯수를 클라이언트에서 보냈다면
             return JsonResponse({'message': form.errors['quantity'][0]}, status=400)
+    else: # 비로그인 유저 장바구니 추가
+        product_id = request.POST.get('product_id')
+        quantity = int(request.POST.get('quantity'))
 
+        if request.COOKIES.get(product_id):
+            previous_quantity = int(request.COOKIES[product_id])
+            request.COOKIES[product_id] = previous_quantity + quantity
+        else:
+            request.COOKIES[product_id] = quantity
+        # # 쿠키에 저장된 기존 장바구니 데이터 가져오기
+        # cart = request.COOKIES.get('cart', '')
+        
+        # # 장바구니 데이터 업데이트
+        # if cart:
+        #     cart += f"|{product_id}:{quantity}"
+        # else:
+        #     cart = f"{product_id}:{quantity}"
+
+        response = JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+        # 장바구니 데이터를 쿠키에 저장
+        max_age = 365 * 24 * 60 * 60  # 1년
+        expires = datetime.strftime(datetime.utcnow() + timedelta(seconds=max_age), "%a, %d-%b-%Y %H:%M:%S GMT")
+        response.set_cookie(product_id, request.COOKIES[product_id], max_age=max_age, expires=expires)
+
+        return response
 # def add_to_cart(request):
 #     if request.user.is_authenticated:
 #         user = request.user
@@ -294,17 +319,148 @@ def update_quantity(request, user_id):
 #         'final_price': final_price
 #     })
 
-# 세션 장바구니
-def guest_cart(request):
-    # 세션에서 장바구니를 가져옴
-    cart = request.session.get('cart', {})
+########################################## 세션 장바구니
+from collections import defaultdict
 
-    # 장바구니에 있는 상품들의 정보를 가져와서 템플릿에 전달함
-    products = Product.objects.filter(id__in=cart.keys())
-    for product in products:
-        product.quantity = cart[str(product.id)]
+def guest_cart(request):
+   # 쿠키에서 장바구니 데이터 가져오기
+   cart_data = request.COOKIES
+
+   # 장바구니 데이터 파싱
+   cart_items = defaultdict(int)
+   for key, value in cart_data.items():
+       if key != 'csrftoken':
+           product_id, quantity = int(key), int(value)
+           cart_items[product_id] += quantity
+
+   # 장바구니 항목 리스트 생성
+   cart_item_list = []
+   for product_id, quantity in cart_items.items():
+       try:
+           product = Product.objects.get(product_id=product_id)
+           cart_item_list.append({
+               'product_id': product_id,
+               'product': product,
+               'quantity': quantity,
+               'total_price': product.price * quantity,
+               'final_price' : (1 - product.discount_rate) * product.price * quantity,
+               'discount_price' : product.discount_rate * product.price * quantity
+           })
+       except Product.DoesNotExist:
+           pass
+
+   # 컨텍스트 딕셔너리 준비
+   context = {
+       'object': cart_item_list,
+       'total_price': sum(item['total_price'] for item in cart_item_list),
+       'discount_price': sum(item['product'].discount_rate * item['total_price'] for item in cart_item_list),
+       'final_price': sum(item['total_price'] * (1 - item['product'].discount_rate) for item in cart_item_list)
+   }
+
+   return render(request, 'customer/guest_cart.html', context)
+
+def delete_guest_cart_item(request):
+    if request.method == 'POST':
+        try:
+            cart_data = request.COOKIES
+            delete_product_id = request.POST.get('product_id')
+
+            if delete_product_id in cart_data:
+                del cart_data[delete_product_id]
+
+            has_numeric_key = False
+            for key in cart_data.keys():
+                if key != 'csrftoken' and key.isdigit():
+                    has_numeric_key = True
+                    break
+            
+            if has_numeric_key: # 남은 물건이 있는 경우
+
+                # 장바구니 데이터 파싱
+                cart_items = defaultdict(int)
+                for key, value in cart_data.items():
+                    if key != 'csrftoken':
+                        product_id, quantity = int(key), int(value)
+                        cart_items[product_id] += quantity
+
+                # 장바구니 항목 리스트 생성
+                cart_item_list = []
+                for product_id, quantity in cart_items.items():
+                    try:
+                        product = Product.objects.get(product_id=product_id)
+                        cart_item_list.append({
+                            'product_id': product_id,
+                            'product': product,
+                            'quantity': quantity,
+                            'total_price': product.price * quantity,
+                            'final_price' : (1 - product.discount_rate) * product.price * quantity,
+                            'discount_price' : product.discount_rate * product.price * quantity
+                        })
+                    except Product.DoesNotExist:
+                        pass
+                
+                response = JsonResponse({
+                    'success': True, 
+                    'total_price': sum(item['total_price'] for item in cart_item_list),
+                    'discount_price': sum(item['product'].discount_rate * item['total_price'] for item in cart_item_list),
+                    'final_price': sum(item['total_price'] * (1 - item['product'].discount_rate) for item in cart_item_list)
+                    })
+                response.delete_cookie(str(delete_product_id))
+
+                return response
+            
+            else: # 삭제 후 남은 물건이 없는 경우
+                response = JsonResponse({'success': True, 'total_price': 0, 'discount_price': 0, 'final_price': 0})
+                response.delete_cookie(product_id)
+                return response
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
     
-    return render(request, 'customer/cart.html', {'products': products})
+def update_guest_cart_quantity(request):
+    update_product_id = request.POST['product_id']
+    update_quantity = request.POST['quantity']
+
+    if update_product_id in request.COOKIES:
+        request.COOKIES[update_product_id] = update_quantity
+
+    cart_data = request.COOKIES
+    # 장바구니 데이터 파싱
+    cart_items = defaultdict(int)
+    for key, value in cart_data.items():
+        if key != 'csrftoken':
+            product_id, quantity = int(key), int(value)
+            cart_items[product_id] += quantity
+
+    # 장바구니 항목 리스트 생성
+    cart_item_list = []
+    for product_id, quantity in cart_items.items():
+        try:
+            product = Product.objects.get(product_id=product_id)
+            cart_item_list.append({
+                'product_id': product_id,
+                'product': product,
+                'quantity': quantity,
+                'total_price': product.price * quantity,
+                'final_price' : (1 - product.discount_rate) * product.price * quantity,
+                'discount_price' : product.discount_rate * product.price * quantity
+            })
+        except Product.DoesNotExist:
+            pass
+    
+    response = JsonResponse({
+        'success': True, 
+        'total_price': sum(item['total_price'] for item in cart_item_list),
+        'discount_price': int(sum(item['product'].discount_rate * item['total_price'] for item in cart_item_list)),
+        'final_price': sum(item['total_price'] * (1 - item['product'].discount_rate) for item in cart_item_list),
+        'one_price' : [{'product_id': item['product_id'], 'price': item['product'].price} for item in cart_item_list]
+        })
+    for item in cart_item_list:
+        response.set_cookie(str(item['product_id']), str(item['quantity']))
+
+    return response
 
 ############################################################################
 
