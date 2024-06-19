@@ -30,7 +30,7 @@ class Category(models.Model):
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
     seller = models.ForeignKey(Seller, on_delete=models.SET_NULL, null=True) # 셀러 삭제 시 null로 설정
-    seller_id = models.IntegerField()  # 셀러 ID를 직접 저장
+    seller_id_copy = models.IntegerField()  # 셀러 ID를 직접 저장
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
     product_name = models.CharField(max_length=255)
     price = models.IntegerField(default=0)
@@ -47,7 +47,7 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         if self.seller:
-            self.seller_id = self.seller.id  # 판매자 ID 저장
+            self.seller_id_copy = self.seller.id  # 판매자 ID 저장
         super(Product, self).save(*args, **kwargs)
 
 class ProductImage(models.Model):

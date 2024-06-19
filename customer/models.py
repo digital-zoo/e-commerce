@@ -44,7 +44,7 @@ class CartItem(models.Model):
 class Order(models.Model):
     order_id = models.AutoField(primary_key=True) 
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)  # 고객 삭제 시 null로 설정
-    customer_id = models.IntegerField()  # 고객 ID를 직접 저장
+    customer_id_copy = models.IntegerField()  # 고객 ID를 직접 저장
     order_date = models.DateField()
     order_status = models.CharField(max_length=50)
     shipping_address = models.CharField(max_length=300)
@@ -59,7 +59,7 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         if self.customer:
-            self.customer_id = self.customer.id  # 고객 ID 저장
+            self.customer_id_copy = self.customer.id  # 고객 ID 저장
         super(Order, self).save(*args, **kwargs)
 
 class OrderItem(models.Model):
@@ -109,7 +109,7 @@ class ShippingAddress(models.Model):
 class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)  # 고객 삭제 시 null로 설정
-    customer_id = models.IntegerField()  # 고객 ID를 직접 저장
+    customer_id_copy = models.IntegerField()  # 고객 ID를 직접 저장
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     content = models.TextField()
     rating = models.IntegerField(default=5)
@@ -117,5 +117,5 @@ class Review(models.Model):
 
     def save(self, *args, **kwargs):
         if self.customer:
-            self.customer_id = self.customer.id  # 고객 ID 저장
+            self.customer_id_copy = self.customer.id  # 고객 ID 저장
         super(Review, self).save(*args, **kwargs)
