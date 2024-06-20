@@ -1,6 +1,3 @@
-# chat/services.py
-
-import openai
 from langchain_community.utilities import SQLDatabase
 from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
@@ -25,45 +22,13 @@ db = SQLDatabase.from_uri(database_url)
 
 llm = ChatOpenAI(temperature=0)  # gpt-4-turbo
 
-# 
-ALLOWED_TABLES = {"seller_product", "seller_seller"}  # 허용된 테이블 목록
-
-# Custom query function to filter allowed tables
-def filter_query(query: str) -> str:
-    # 간단히 예를 들어 테이블 이름을 추출하고 필터링합니다.
-    for table in ALLOWED_TABLES:
-        if f"FROM {table}" in query or f"JOIN {table}" in query:
-            return query
-    raise ValueError("Access to this table is not allowed")
-
 def write_query(question: str) -> str:
     messages = [{"role": "user", "content": question}]
     response = llm(messages=messages)
     return response["choices"][0]["message"]["content"] if "choices" in response and len(response["choices"]) > 0 else ""
 
-# Custom SQL query chain with filtering 
-def create_filtered_sql_query_chain(llm, db):
-    def custom_chain(input):
-        question = input["question"]
-        sql_query = write_query(question)
-        filtered_query = filter_query(sql_query)
-        result = execute_query(filtered_query)
-        return {"query": filtered_query, "result": result}
-    return custom_chain # An unexpected error occurred: string indices must be integers 발생
-
-# def create_filtered_sql_query_chain(llm, db):
-#     def custom_chain(input):
-#         question = input["question"]
-#         # SQL 쿼리를 생성하는 부분을 LLM 호출로 변경
-#         sql_query = llm.generate(question)
-#         filtered_query = filter_query(sql_query)
-#         result = execute_query(filtered_query)
-#         return {"query": filtered_query, "result": result}
-#     return custom_chain
-
 write_query = create_sql_query_chain(llm, db)
-#write_query = create_filtered_sql_query_chain(llm, db)
-write_query_chain = create_filtered_sql_query_chain(llm, db)
+
 execute_query = QuerySQLDataBaseTool(db=db)
 
 answer_prompt = PromptTemplate.from_template(
@@ -92,24 +57,6 @@ chain = (
     )
     | answer
 )
-
-# def ask_question(question: str) -> str:
-#     response = chain.invoke({"question": question})
-#     print("Response type:", type(response))  # 추가
-#     print("Response content:", response)  # 추가
-#     if isinstance(response, dict) and 'Answer' in response:
-#         return response['Answer']  # 'Answer' 키를 사용하여 응답을 가져옵니다.
-#     return "Unexpected response format"
-
-# def ask_question(question: str) -> str:
-#     response = chain.invoke({"question": question})
-#     print("Response type:", type(response))  # 추가
-#     print("Response content:", response)  # 추가
-#     if isinstance(response, dict) and 'Answer' in response:
-#         return response['Answer']
-#     elif isinstance(response, str):
-#         return response
-#     return "Unexpected response format"
 
 def ask_question(question: str) -> str:
     try:

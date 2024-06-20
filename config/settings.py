@@ -19,11 +19,11 @@ SECRET_KEY = 'django-insecure-g85unx)#*coyc!rhzpskz8tcoop=zur@i$ie%t)6g*1_r(nihw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 
 # Application definition
-
+X_FRAME_OPTIONS = 'ALLOW-FROM http://localhost:8000/'
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'customer',
     'seller',
     'widget_tweaks', # 로그인 기능 구현을 위한 
+    'mychatbot',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -44,8 +46,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    
 ]
-
+CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -65,24 +68,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'digital_zoo_pj_2',
         'USER': 'postgres',
         'PASSWORD': db_password,
-        'HOST': 'hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소
+        'HOST': 'db.hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소 211.110.169.141 'hanslab.org'
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }
 }
 
 
-# Password validation
+# Password valida\tion
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [

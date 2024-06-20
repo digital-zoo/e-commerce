@@ -17,19 +17,5 @@ def chatbot_query(request):
         return JsonResponse({'error': 'No question provided'}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-# @csrf_exempt
-# def chatbot_query(request):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             question = data.get("question", "")
-#             if not question:
-#                 return JsonResponse({"error": "No question provided"}, status=400)
-#             answer = ask_question(question)
-#             return JsonResponse({"answer": answer})
-#         except Exception as e:
-#             return JsonResponse({"error": str(e)}, status=500)
-#     return JsonResponse({"error": "Invalid method"}, status=405)
-
 def chat_view(request):
     return render(request, 'chat.html')
