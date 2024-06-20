@@ -14,6 +14,9 @@ from datetime import date
 from django.http import JsonResponse
 from django.db import transaction
 import json
+import requests
+import os
+from dotenv import load_dotenv
 
 # Create your views here.
 class CategoryList(ListView):
@@ -711,15 +714,57 @@ def order_fail(request):
             'message' : err_message,
             }
         return render(request, 'customer/order_fail.html', context)
-    
+
+# 로그인한 고객의 전체 주문 내역
+@login_required
 def my_shopping_list(request):
     if request.method == 'GET':
         # 구매자 정보 불러오기
         user = request.user
         # 구매자의 모든 주문 가져오기
-        order = Order.objects.filter(customer=user)
-
+        orders = Order.objects.filter(customer=request.user) \
+        .prefetch_related('orderitem_set__product', 'payment_set')
         context={
-            'orders' : order,
+            'orders' : orders,
             }
-        return render(request,"customer/my_shopping.html")
+        return render(request,"customer/my_shopping.html", context)
+    
+# 결제 관련 rest api 인증 정보 
+load_dotenv() 
+rest_api_imp=os.getenv("PAYMENT_REST_API_IMP")
+rest_api_key=os.getenv("PAYMENT_REST_API_KEY")
+rest_api_secret=os.getenv("PAYMENT_REST_API_SECRET")
+
+# 액세스 토큰 발급 함수
+def get_access_token():
+    url = "https://api.iamport.kr/users/getToken"
+    payload = {
+        'imp_key': rest_api_key,
+        'imp_secret': rest_api_secret
+    }
+    response = requests.post(url, data=payload)
+    return response.json().get('response').get('access_token')
+
+# 주문 취소 (환불 포함)
+@login_required
+@transaction.atomic
+def cancel_order(request, order_id):
+    token = get_access_token()
+    url = f"https://api.iamport.kr/payments/cancel"
+    headers = {
+        'Authorization': token
+    }
+    payload = {
+        'imp_uid': rest_api_imp,  # 포트원 거래 고유번호
+        'reason': '취소 사유', # 프론트에서 받아오기
+        'amount': '환불 금액',
+        'refund_holder': '환불 받을 계좌 소유주',
+        'refund_bank': '환불 받을 은행 코드',
+        'refund_account': '환불 받을 계좌 번호'
+    }
+    response = requests.post(url, headers=headers, data=payload)
+
+    # + 디비에 주문정보+결제정보 수정
+
+    return JsonResponse(response.json())
+
