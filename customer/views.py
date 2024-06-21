@@ -745,10 +745,15 @@ def get_access_token():
     response = requests.post(url, data=payload)
     return response.json().get('response').get('access_token')
 
-# 주문 취소 (환불 포함)
+# 주문 취소 (결제된 상품이면 환불 포함)
 @login_required
 @transaction.atomic
 def cancel_order(request, order_id):
+    # 결제완료(카드)일 경우만 주문 취소 기능 활성화 + 결제대기(통장)의 경우 추가 가능
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    if order.order_status not in ['결제완료']:
+        return JsonResponse({'code': 1, 'message': '주문 취소가 불가능한 상태입니다.'})
+    
     token = get_access_token()
     url = f"https://api.iamport.kr/payments/cancel"
     headers = {
@@ -756,13 +761,15 @@ def cancel_order(request, order_id):
     }
     payload = {
         'imp_uid': rest_api_imp,  # 포트원 거래 고유번호
-        'reason': '취소 사유', # 프론트에서 받아오기
+        'reason': '사용자 요청', # 프론트에서 받아오기
         'amount': '환불 금액',
         'refund_holder': '환불 받을 계좌 소유주',
         'refund_bank': '환불 받을 은행 코드',
         'refund_account': '환불 받을 계좌 번호'
     }
     response = requests.post(url, headers=headers, data=payload)
+
+    # 결제완료 결제실패 환불대기 주문중 + 결제대기
 
     # + 디비에 주문정보+결제정보 수정
 

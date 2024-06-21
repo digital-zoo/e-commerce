@@ -18,11 +18,11 @@
         background-color: #f2f2f2;
     }
     td[colspan="8"] {
-        background-color: #f0f0f0; /* Light gray */
+        background-color: #f0f0f0;
         text-align: center;
         font-weight: bold;
     }
-    /* Action buttons */
+   
     button {
         padding: 5px 10px;
         cursor: pointer;
@@ -76,7 +76,6 @@
                     </td>
                     <td>
                         <button onclick="cancelOrder('{{ order.order_id }}')">주문 취소</button>
-                        <button onclick="refundPayment('{{ order.order_id }}')">환불 요청</button>
                     </td>
                 </tr>
             {% endfor %}
@@ -99,24 +98,6 @@ function cancelOrder(orderId) {
             location.reload();
         } else {
             alert('주문 취소에 실패했습니다.');
-        }
-    });
-}
-
-function refundPayment(orderId) {
-    fetch(`/refund_payment/${orderId}`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.code === 0) {
-            alert('환불 요청이 완료되었습니다.');
-            location.reload();
-        } else {
-            alert('환불 요청에 실패했습니다.');
         }
     });
 }
