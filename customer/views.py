@@ -159,22 +159,42 @@ def cart(request, pk):
 from .forms import CartItemForm # 폼을 활용한 데이터 유효성 검사
 
 def add_to_cart(request):
-    if request.user.is_authenticated:
-        user = request.user
-        product_id = request.POST.get('product_id')
+    try:
+        if request.user.is_authenticated:
+            user = request.user
+            product_id = request.POST.get('product_id')
+            form = CartItemForm(request.POST)
+            if form.is_valid():
+                quantity = form.cleaned_data['quantity']
+                product = Product.objects.get(product_id=product_id)
+                cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
+                cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity': 0})
+                cartitem.quantity += quantity
+                cartitem.save()
+                return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+            else:
+                return JsonResponse({'message': form.errors['quantity'][0]}, status=400)
+        else:
+            return JsonResponse({'message': 'User not authenticated'}, status=401)
+    except Exception as e:
+        return JsonResponse({'message': 'An error occurred'}, status=500)
+# def add_to_cart(request):
+#     if request.user.is_authenticated:
+#         user = request.user
+#         product_id = request.POST.get('product_id')
 
-        form = CartItemForm(request.POST) # 클라이언트에서 전송한 POST 데이터를 생성한 CartItemForm에 바인딩
-        if form.is_valid(): # 해당 인스턴스가 유효하다면 즉, validators 매개변수에서 지정한 검사를 통과했다면
-            quantity = form.cleaned_data['quantity']
-            product = Product.objects.get(product_id=product_id)
-            cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
-            cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity': 0})
-            cartitem.quantity += quantity
-            cartitem.save()
+#         form = CartItemForm(request.POST) # 클라이언트에서 전송한 POST 데이터를 생성한 CartItemForm에 바인딩
+#         if form.is_valid(): # 해당 인스턴스가 유효하다면 즉, validators 매개변수에서 지정한 검사를 통과했다면
+#             quantity = form.cleaned_data['quantity']
+#             product = Product.objects.get(product_id=product_id)
+#             cart, cart_created = Cart.objects.get_or_create(customer_id=user.id)
+#             cartitem, caritem_created = CartItem.objects.get_or_create(cart_id=cart.cart_id, product_id=product_id, defaults={'quantity': 0})
+#             cartitem.quantity += quantity
+#             cartitem.save()
 
-            return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
-        else: # 통과하지 못했다면 즉, 1 이하의 갯수를 클라이언트에서 보냈다면
-            return JsonResponse({'message': form.errors['quantity'][0]}, status=400)
+#             return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
+#         else: # 통과하지 못했다면 즉, 1 이하의 갯수를 클라이언트에서 보냈다면
+#             return JsonResponse({'message': form.errors['quantity'][0]}, status=400)
 
 # def add_to_cart(request):
 #     if request.user.is_authenticated:
