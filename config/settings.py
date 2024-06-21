@@ -23,7 +23,6 @@ ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-X_FRAME_OPTIONS = 'ALLOW-FROM http://localhost:8000/'
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
