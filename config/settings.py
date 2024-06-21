@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'customer',
     'seller',
     'widget_tweaks', # 로그인 기능 구현을 위한     
+    'myuser', # 공통 추상 테이블 전용
     'corsheaders',
 ]
 
@@ -69,7 +70,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'digital_zoo_pj_2',
+        'NAME': 'digital_zoo_pj_3',
         'USER': 'postgres',
         'PASSWORD': db_password,
         'HOST': 'db.hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소 211.110.169.141 'hanslab.org'
