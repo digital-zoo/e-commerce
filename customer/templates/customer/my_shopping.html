@@ -75,7 +75,9 @@
                         {% endfor %}
                     </td>
                     <td>
-                        <button onclick="cancelOrder('{{ order.order_id }}')">주문 취소</button>
+                        {% if order.order_status == '결제완료' %}
+                            <button onclick="cancelOrder('{{ order.order_id }}')">주문 취소</button>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}

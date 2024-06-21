@@ -109,6 +109,7 @@ class Order(models.Model):
     def __str__(self):
         return str(self.order_id)
 
+# 결제 예정금액 저장
 class OrderItem(models.Model):
     orderitem_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -117,7 +118,8 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return str(self.orderitem_id)
-    
+
+# paid_amount -> total paid_amount 로 수정
 class Payment(models.Model):
     payment_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
