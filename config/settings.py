@@ -19,7 +19,7 @@ SECRET_KEY = 'django-insecure-g85unx)#*coyc!rhzpskz8tcoop=zur@i$ie%t)6g*1_r(nihw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -33,8 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'customer',
     'seller',
-    'widget_tweaks', # 로그인 기능 구현을 위한 
-    'mychatbot',
+    'widget_tweaks', # 로그인 기능 구현을 위한     
     'corsheaders',
 ]
 
