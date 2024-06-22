@@ -1,0 +1,26 @@
+﻿name: Create and Write to a File on EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: 'File name to create'
+        required: true
+        default: 'text.txt'
+      content:
+        description: 'Content to write in the file'
+        required: true
+        default: 'Hello, World!'
+
+jobs:
+  create-file:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup SSH Keys
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+
+    - name: Create and write to the file on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} "echo '${{ github.event.inputs.content }}' > '/home/${{ secrets.USERNAME }}/${{ github.event.inputs.filename }}'"
