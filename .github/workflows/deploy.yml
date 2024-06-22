@@ -19,7 +19,7 @@ jobs:
 
     - name: Sync and Deploy
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} "
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@{{ secrets.HOST }} "
 
         cd /home/ubuntu/e-commerce
         git pull        
