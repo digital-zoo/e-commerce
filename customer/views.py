@@ -425,6 +425,8 @@ def quick_checkout(request):
         final_price = discounted_price * int(quantity)
         original_final_price = product.price * int(quantity)
         saved_price = original_final_price - final_price
+        # 구매자 배송지 정보 불러오기
+        shipping_addresses = ShippingAddress.objects.filter(customer=user)
 
         context = {
         'user' : user,
@@ -434,6 +436,7 @@ def quick_checkout(request):
         'final_price' : final_price,
         'original_final_price' : original_final_price,
         'saved_price' : saved_price,
+        'shipping_addresses' : shipping_addresses,
         }
         return render(request, 'customer/checkout.html', context)
     
@@ -483,7 +486,15 @@ def save_order(request):
                     order = order,
                     product=product,
                     quantity=quantity
-                )   
+                )
+        # 입력한 주소 배송지 목록에 저장하기
+        shipping_address = ShippingAddress.objects.create(
+                    customer = user,
+                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    postal_code = postal_code,
+                    recipient = recipient,
+                    recipient_phone_number = recipient_phone_number
+                )
         
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
 
@@ -539,6 +550,8 @@ def cart_checkout(request):
         cart = Cart.objects.get(customer=user)
         # 카트 아이템 불러오기
         cart_items = CartItem.objects.filter(cart=cart)
+        # 구매자 배송지 정보 불러오기
+        shipping_addresses = ShippingAddress.objects.filter(customer=user)
 
         # 각 카트 아이템의 가격 정보를 계산하여 리스트에 저장
         cart_items_info = []
@@ -567,6 +580,7 @@ def cart_checkout(request):
             'total_final_price': total_final_price,
             'total_original_final_price': total_original_final_price,
             'total_saved_price': total_saved_price,
+            'shipping_addresses' : shipping_addresses,
         }
         return render(request, 'customer/checkout_cart.html', context)
     
