@@ -750,28 +750,42 @@ def get_access_token():
 @transaction.atomic
 def cancel_order(request, order_id):
     # 결제완료(카드)일 경우만 주문 취소 기능 활성화 + 결제대기(통장)의 경우 추가 가능
-    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    order = get_object_or_404(Order, pk=order_id, customer=request.user)
     if order.order_status not in ['결제완료']:
         return JsonResponse({'code': 1, 'message': '주문 취소가 불가능한 상태입니다.'})
     
+    # 취소/환불할 상품의 결제 정보가져오기 (결제가 완료된 상태에 한해 진행 중)
+    payment = Payment.objects.get(order=order)
+    imp_uid = payment.imp_uid
+
+    # 주문 항목의 종류 수 계산 (테스트금액 100원을 상품종류 수로 나눠서 부분 환불을 가능하게 하기 위해서 필요)
+    orderitem_count = order.orderitem_set.count()
+
+    # 환불 금액을 주문 항목 종류 수로 나눔
+    refund_amount = 100 / orderitem_count
+
+    # api 통신 토큰 생성 (30분 유효)
     token = get_access_token()
     url = f"https://api.iamport.kr/payments/cancel"
     headers = {
+        "Content-Type": "application/json",
         'Authorization': token
     }
     payload = {
-        'imp_uid': rest_api_imp,  # 포트원 거래 고유번호
-        'reason': '사용자 요청', # 프론트에서 받아오기
-        'amount': '환불 금액',
-        'refund_holder': '환불 받을 계좌 소유주',
-        'refund_bank': '환불 받을 은행 코드',
-        'refund_account': '환불 받을 계좌 번호'
+        'imp_uid': imp_uid,  # 포트원 주문번호
+        'amount' : refund_amount, # 취소한 상품의 결제 금액만큼 취소 (부분취소)
+        'reason': '고객 요청', 
     }
-    response = requests.post(url, headers=headers, data=payload)
+    response = requests.request("post", url, json=payload, headers=headers)
+    result = response.json()
 
-    # 결제완료 결제실패 환불대기 주문중 + 결제대기
-
-    # + 디비에 주문정보+결제정보 수정
+    # 결제 금액과 취소 금액 비교하여 주문 상태 업데이트
+    cancel_amount = result.get('response', {}).get('cancel_amount', 0)
+    if cancel_amount >= payment.paid_amount:
+        order.order_status = '환불완료'
+    else:
+        order.order_status = '부분환불'
+    order.save()
 
     return JsonResponse(response.json())
 

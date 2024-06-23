@@ -181,7 +181,7 @@
                     pay_method : $('#payment_method').val(), // 신용카드 
                     merchant_uid : 'merchant_' + new Date().getTime(), 
                     name : '다중상품결제',
-                    amount : 100, // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
+                    amount : 100 * '{{ cart_items|length }}', // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
                     buyer_email : '{{ user.email }}',
                     buyer_name : '{{ user.username }}',
                     buyer_tel : '{{ user.phone_number }}',

@@ -87,7 +87,8 @@
 
 <script>
 function cancelOrder(orderId) {
-    fetch(`/cancel_order/${orderId}`, {
+    const url = "{% url 'customer:cancel_order' order_id=0 %}".replace('0', orderId);
+    fetch(url, {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}'
