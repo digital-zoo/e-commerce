@@ -758,12 +758,6 @@ def cancel_order(request, order_id):
     payment = Payment.objects.get(order=order)
     imp_uid = payment.imp_uid
 
-    # 주문 항목의 종류 수 계산 (테스트금액 100원을 상품종류 수로 나눠서 부분 환불을 가능하게 하기 위해서 필요)
-    orderitem_count = order.orderitem_set.count()
-
-    # 환불 금액을 주문 항목 종류 수로 나눔
-    refund_amount = 100 / orderitem_count
-
     # api 통신 토큰 생성 (30분 유효)
     token = get_access_token()
     url = f"https://api.iamport.kr/payments/cancel"
@@ -773,7 +767,7 @@ def cancel_order(request, order_id):
     }
     payload = {
         'imp_uid': imp_uid,  # 포트원 주문번호
-        'amount' : refund_amount, # 취소한 상품의 결제 금액만큼 취소 (부분취소)
+        'amount' : 100, # 취소한 상품의 결제 금액만큼 취소 (부분취소)
         'reason': '고객 요청', 
     }
     response = requests.request("post", url, json=payload, headers=headers)
