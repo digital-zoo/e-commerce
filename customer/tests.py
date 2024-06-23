@@ -13,7 +13,7 @@ class OrderTestCase(TestCase):
         self.product = Product.objects.create(product_id='1', name='Test Product', stock=10, price=1000)
         # 테스트용 클라이언트 설정
         self.client = Client()
-        self.client.login(username='testuser', password='12345')
+        self.client.login(username='yeonhuitester', password='hhhh1111')
         # 주문 URL 설정
         self.order_url = reverse('save_order')
         self.cancel_url = lambda order_id: reverse('order-cancel', args=[order_id])
