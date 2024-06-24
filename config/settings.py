@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-g85unx)#*coyc!rhzpskz8tcoop=zur@i$ie%t)6g*1_r(nihw'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -132,3 +132,5 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
     'seller.backends.SellerAuthenticationBackend', # Seller 인증 백엔드
 ]
+
+CSRF_TRUSTED_ORIGINS = ['http://54.180.183.219:8080']

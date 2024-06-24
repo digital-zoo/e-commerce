@@ -113,7 +113,8 @@ def like_product(request,product_id):
         return JsonResponse({'success': True, 'likeTF': likeTF})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request'})
-    
+
+@csrf_protect
 def search_product(request):
     if request.method == 'POST':
 
