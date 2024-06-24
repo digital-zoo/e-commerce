@@ -26,6 +26,7 @@ class Category(models.Model):
     def __str__(self):
         return self.category_name
 
+from django.utils import timezone
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
