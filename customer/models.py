@@ -67,8 +67,9 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey('seller.Product', on_delete=models.SET_NULL, null=True)  # 상품 삭제 시 null로 설정
     product_name = models.CharField(max_length=100)  # 주문 당시의 상품 이름을 저장
-    product_price = models.DecimalField(max_digits=10, decimal_places=2)  # 주문 당시의 상품 가격을 저장
-    quantity = models.IntegerField() 
+    product_price = models.DecimalField(max_digits=10, decimal_places=2)  # 주문 당시의 상품 가격을 저장(할인가 등)
+    quantity = models.IntegerField()
+    is_refunded = models.BooleanField(default=False)  # 환불 여부
 
     def __str__(self):
         return str(self.orderitem_id)
@@ -102,6 +103,7 @@ class ShippingAddress(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     shipping_address_name = models.CharField(max_length=20)
     shipping_address = models.CharField(max_length=300)
+    shipping_address_detail = models.CharField(max_length=300)
     postal_code = models.CharField(max_length=5)
     recipient = models.CharField(max_length=100)
     recipient_phone_number = models.CharField(max_length=20)
