@@ -16,7 +16,7 @@
             <h2>배송 정보</h2>
         </div>
         <div class="col">
-            <button type="button" class="btn btn-secondary float-end">배송지 목록</button>
+            <button type="button" class="btn btn-secondary float-end" data-bs-toggle="modal" data-bs-target="#addressModal">배송지 목록</button>
         </div>
     </div>
     <div class="card">
@@ -60,6 +60,29 @@
     </div>
 </div>
 <br><br>
+
+<!-- 배송지 목록 팝업창 -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">배송지 목록</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="addressList">
+                    {% for address in shipping_addresses %}
+                    <li>
+                        <a href="#" data-postal-code="{{ address.postal_code }}" data-address="{{ address.shipping_address }}" data-recipient="{{ address.recipient }}" data-phone-number="{{ address.recipient_phone_number }}">
+                            {{ address.shipping_address }}, {{ address.recipient }}, {{ address.recipient_phone_number }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 
 <h2 >주문 상품</h2><br>
 {% for item in cart_items %}
@@ -134,6 +157,29 @@
 </script>
 
 <script>
+    // 배송지 목록에서 주소 선택 시 입력란 자동 채우기
+    document.querySelectorAll('#addressList a').forEach(function(addressLink) {
+        addressLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            var postalCode = this.getAttribute('data-postal-code');
+            var address = this.getAttribute('data-address');
+            var recipient = this.getAttribute('data-recipient');
+            var phoneNumber = this.getAttribute('data-phone-number');
+            
+            document.getElementById('postal_code').value = postalCode;
+            document.getElementById('shipping_address').value = address;
+            document.getElementById('recipient').value = recipient;
+            document.getElementById('recipient_phone_number').value = phoneNumber;
+            
+            // 팝업창 닫기
+            var addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+            addressModal.hide();
+        });
+    });
+    </script>  
+
+<script>
     // 입력한 수령인 전화번호 유효성 검사  
     document.getElementById("recipient_phone_number").addEventListener("input", function() {
         var phoneInput = this.value;
@@ -181,7 +227,7 @@
                     pay_method : $('#payment_method').val(), // 신용카드 
                     merchant_uid : 'merchant_' + new Date().getTime(), 
                     name : '다중상품결제',
-                    amount : 100, // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
+                    amount : 100 * '{{ cart_items|length }}', // 임시 테스트 결제값 -> DB에는 실제 상품 값 저장
                     buyer_email : '{{ user.email }}',
                     buyer_name : '{{ user.username }}',
                     buyer_tel : '{{ user.phone_number }}',

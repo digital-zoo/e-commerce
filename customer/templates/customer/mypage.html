@@ -14,7 +14,7 @@
             <!-- 하단 박스 -->
             <div class="border border-secondary p-3 bg-white mb-3">
                 <h5>MY 쇼핑</h5>
-                
+                <a href="{%url 'customer:my_shopping_list'%}" class="d-block">주문내역</a>    
             </div>
             <div class="border border-secondary p-3 bg-white mb-3">
                 <h5>MY 혜택</h5>
@@ -35,6 +35,8 @@
         <!-- 우측 주요 기능 공간 -->
         <div class="col-md-9">
             <!-- 여기에 주요 내용을 추가합니다. -->
+            {% block content_side %}
+            {% endblock %}
         </div>
     </div>
     {% else %}

@@ -112,7 +112,6 @@ class Review(models.Model):
     customer_id_copy = models.IntegerField()  # 고객 ID를 직접 저장
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     content = models.TextField()
-    rating = models.IntegerField(default=5)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
