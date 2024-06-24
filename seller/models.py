@@ -16,6 +16,8 @@ class Category(models.Model):
     def __str__(self):
         return self.category_name
 
+from django.utils import timezone
+
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
@@ -27,6 +29,8 @@ class Product(models.Model):
     stock = models.IntegerField()
     discount_rate = models.DecimalField(max_digits=3, decimal_places=2)
     is_option = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def category_name(self):
         return self.category.category_name

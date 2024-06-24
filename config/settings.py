@@ -76,7 +76,7 @@ DATABASES = {
         'NAME': 'digital_zoo_pj_2',
         'USER': 'postgres',
         'PASSWORD': db_password,
-        'HOST': 'hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소
+        'HOST': '211.110.169.141',  # 또는 PostgreSQL 서버의 IP 주소
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }
 }
