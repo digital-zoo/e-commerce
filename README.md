@@ -66,7 +66,6 @@ AJAX를 이용한 비동기 처리를 통해 페이지의 새로고침없이 서
 ![대체 텍스트](ReadmeImages/site_sample2.png)
 6. 검색기능
 ![대체 텍스트](ReadmeImages/site_sample4.png)
-<<<<<<< HEAD
 
 ## 송용진
 **1.사용자 정의 User 테이블**
@@ -155,5 +154,3 @@ AUTHENTICATION_BACKENDS = [
 | 3.   | 결제 정보를 데이터베이스에 저장 & 상품 재고 수정 | 결제완료   | <li>재고 부족 : 재고 부족으로 인한 환불 안내(알림창) <br><br> <li>데이터 오류 : 데이터 오류로 인한 환불 안내(주문실패 페이지) | 환불대기  | ![대체 텍스트](ReadmeImages/결제재고부족.jpg)<br><br>![대체 텍스트](ReadmeImages/결제실패디비문제_환불안내.jpg) |
 | 성공   | 주문/결제 정보 요약안내(주문 성공 페이지)  |     |             |       | ![대체 텍스트](ReadmeImages/결제성공.jpg)  |
 ---
-=======
->>>>>>> fea7a2754f4ceab144c87233d7a471b8e8d41880

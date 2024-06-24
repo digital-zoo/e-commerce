@@ -23,7 +23,6 @@ ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,7 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'customer',
     'seller',
-    'widget_tweaks', # 로그인 기능 구현을 위한 
+    'widget_tweaks', # 로그인 기능 구현을 위한     
+    'myuser', # 공통 추상 테이블 전용
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -43,9 +44,10 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    
 ]
-
+CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -65,24 +67,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'digital_zoo_pj_2',
+        'NAME': 'digital_zoo_pj_3',
         'USER': 'postgres',
-        'PASSWORD': db_password,
-        'HOST': '211.110.169.141',  # 또는 PostgreSQL 서버의 IP 주소
+        'PASSWORD': 'G=nf_-}EKl',
+        'HOST': 'db.hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소 211.110.169.141 'hanslab.org'
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }
 }
 
 
-# Password validation
+# Password valida\tion
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -116,18 +113,19 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR/'static']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'customer.Customer'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # LOGIN_REDIRECT_URL = '/'
 
@@ -135,3 +133,5 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
     'seller.backends.SellerAuthenticationBackend', # Seller 인증 백엔드
 ]
+
+CSRF_TRUSTED_ORIGINS = ['http://54.180.183.219:8080']
