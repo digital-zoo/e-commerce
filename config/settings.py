@@ -72,7 +72,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'digital_zoo_pj_3',
         'USER': 'postgres',
-        'PASSWORD': 'G=nf_-}EKl',
+        'PASSWORD': db_password,
         'HOST': 'db.hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소 211.110.169.141 'hanslab.org'
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }
@@ -119,12 +119,13 @@ STATICFILES_DIRS = [BASE_DIR/'static']
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'customer.Customer'
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # LOGIN_REDIRECT_URL = '/'
 
