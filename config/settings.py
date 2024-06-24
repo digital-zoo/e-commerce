@@ -132,5 +132,3 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
     'seller.backends.SellerAuthenticationBackend', # Seller 인증 백엔드
 ]
-
-CSRF_TRUSTED_ORIGINS = ['http://54.180.183.219:8080']
