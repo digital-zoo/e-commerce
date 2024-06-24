@@ -13,7 +13,8 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 # from django.contrib import messages
 from customer.models import MyUser
-from django.db.models import Q
+from django.db.models import Q, Prefetch
+from django.contrib.auth.decorators import login_required
 
 def seller_index(request):    
     product = Product.objects.filter(seller=request.user)
@@ -82,17 +83,28 @@ def add_product(request):
 def order_manage(request):
 
     seller = Seller.objects.get(id=request.user.id)            
-    sold_products = Order.objects.filter(orderitem__product__seller=seller).distinct()  
+    sold_products = (
+        Order.objects.filter(orderitem__product__seller=seller)
+        .distinct()
+        .prefetch_related(
+            Prefetch('orderitem_set', queryset=OrderItem.objects.select_related('product'))
+        )
+    )
     context = {'sold_products': sold_products}    
     return render(request, 'seller/seller_order_manage.html', context)
 
+@login_required
 def edit_product(request, product_id):
     try:
         product = Product.objects.get(product_id=product_id)
         existing_images = ProductImage.objects.filter(product=product)
+
+        if product.seller != request.user:
+            messages.error(request, "자신이 등록한 상품만 수정할 수 있습니다.")
+            return redirect('seller:seller_index')
     except Product.DoesNotExist:
         messages.error(request, "수정하려는 상품이 존재하지 않습니다.")
-        return redirect('seller:product_list')
+        return redirect('seller:seller_index')
 
     if request.method == 'POST':
         # 정보 가져오기
