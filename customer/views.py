@@ -137,7 +137,7 @@ def search_product(request):
             product_list = []
 
         # Paginator 객체 생성 (한 페이지당 10개의 아이템을 보여줄 경우)
-        paginator = Paginator(product_list, 2)
+        paginator = Paginator(product_list, 12)
 
         page_number = request.GET.get('page')
         try:
@@ -375,7 +375,7 @@ def create_review(request, product_id):
         if content and rating:
             review, created = Review.objects.get_or_create(
                 product=product,
-                customer=request.user.customer,
+                customer=request.user,
                 defaults={'content': content, 'rating': rating}
             )
             if not created:

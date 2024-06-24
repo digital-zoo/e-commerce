@@ -72,12 +72,11 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'digital_zoo_pj_final',
         'USER': 'postgres',
-        'PASSWORD':db_password,
+        'PASSWORD':'G=nf_-}EKl',
         'HOST': 'db.hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소 211.110.169.141 'hanslab.org'
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }
 }
-
 
 # Password valida\tion
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
