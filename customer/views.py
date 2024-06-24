@@ -17,84 +17,93 @@ import json
 import requests
 import os
 from dotenv import load_dotenv
+from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Count
 
-# Create your views here.
+
 class CategoryList(ListView):
-    template_name='customer/product_category.html'
-    paginate_by=2
+    template_name = 'customer/product_category.html'
+    paginate_by = 12  # 페이지당 2개의 아이템을 보여줄 예정입니다
 
-    #필요한 데이터 가져오기
     def get_queryset(self):
-        product_queryset = Product.objects.all()
-        category_queryset = Category.objects.all()
-        return list(product_queryset) + list(category_queryset)    
+        # 카테고리 ID를 가져옵니다.
+        category_id = self.kwargs['category_id']
+        # 선택된 카테고리에 해당하는 상품들만 필터링합니다.
+        category = Category.objects.get(category_id=category_id)
+        queryset = Product.objects.filter(category=category)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #category_id인자 받아오기
+        # 카테고리 ID를 가져옵니다.
         category_id = self.kwargs['category_id']
-        #선택된 카테고리에 해당하는 상품들만 추출
-        category=Category.objects.get(category_id=category_id)
-        context['products'] =  Product.objects.filter(category=category)
+        category = Category.objects.get(category_id=category_id)
+        
+        # 페이지네이션을 위해 Paginator 객체를 생성합니다.
+        product_list = self.get_queryset()
+        paginator = Paginator(product_list, self.paginate_by)
+        
+        page_number = self.request.GET.get('page')
+        try:
+            products = paginator.page(page_number)
+        except PageNotAnInteger:
+            # 페이지 번호가 정수가 아닌 경우, 첫 페이지로 설정합니다.
+            products = paginator.page(1)
+        except EmptyPage:
+            # 페이지가 비어 있는 경우, 마지막 페이지로 설정합니다.
+            products = paginator.page(paginator.num_pages)
+        
+        context['products'] = products
         context['categories'] = Category.objects.all()
         context['current_category'] = category
         context['current_sorted_by'] = ''
         return context
-
-from django.db.models import Count
-class SortedList(ListView):
-    template_name='home.html'
-        
-    model = Product
-    context_object_name = 'products'  
-        
-    def get_queryset(self):
-        sorted_by = self.kwargs['sorted_by']
-        if sorted_by == 'newest':
-            return Product.objects.order_by('-discount_rate')
-        elif sorted_by == 'order':
-            return Product.objects.annotate(num_orders=Count('orderitem')).order_by('-num_orders')
-        elif sorted_by == 'like':
-            return Product.objects.annotate(num_likes=Count('like')).order_by('-num_likes')
-        else:
-            return Product.objects.all()
-        
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
-        context['current_sorted_by'] = self.kwargs['sorted_by']
-        return context
+    
 
 class CategorySortedList(ListView):
-    template_name='customer/product_category.html'
-        
-    model = Product
-    context_object_name = 'products'  
-        
+    template_name = 'customer/product_category.html'
+    paginate_by = 12  # 페이지당 2개의 아이템을 보여줄 예정입니다
+
     def get_queryset(self):
         sorted_by = self.kwargs['sorted_by']
         category_id = self.kwargs['category_id']
-        #선택된 카테고리에 해당하는 상품들만 추출
-        category=Category.objects.get(category_id=category_id)
+        category = Category.objects.get(category_id=category_id)
         products = Product.objects.filter(category=category)
-        
+
         if sorted_by == 'newest':
-            return products.order_by('-discount_rate')
+            queryset = products.order_by('-discount_rate')
         elif sorted_by == 'order':
-            return products.annotate(num_orders=Count('orderitem')).order_by('-num_orders')
+            queryset = products.annotate(num_orders=Count('orderitem')).order_by('-num_orders')
         elif sorted_by == 'like':
-            return products.annotate(num_likes=Count('like')).order_by('-num_likes')
+            queryset = products.annotate(num_likes=Count('like')).order_by('-num_likes')
         else:
-            return products.all()
-        
+            queryset = products.all()
+
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_id = self.kwargs['category_id']
-        #선택된 카테고리에 해당하는 상품들만 추출
-        category=Category.objects.get(category_id=category_id)
+        category = Category.objects.get(category_id=category_id)
+        
+        # 선택된 카테고리에 해당하는 상품들만 추출하여 Paginator 객체 생성
+        product_list = self.get_queryset()
+        paginator = Paginator(product_list, self.paginate_by)
+        
+        page_number = self.request.GET.get('page')
+        try:
+            products = paginator.page(page_number)
+        except PageNotAnInteger:
+            products = paginator.page(1)
+        except EmptyPage:
+            products = paginator.page(paginator.num_pages)
+        
+        context['products'] = products
         context['categories'] = Category.objects.all()
-        context['current_sorted_by'] = self.kwargs['sorted_by']
         context['current_category'] = category
+        context['current_sorted_by'] = self.kwargs['sorted_by']
         return context
 
 def like_product(request,product_id):
@@ -126,7 +135,23 @@ def search_product(request):
             # 검색 결과를 템플릿에 전달
         else:
             product_list = []
-        return render(request, 'customer/search.html', {'products': product_list, 'search_word': search_word})  
+
+        # Paginator 객체 생성 (한 페이지당 10개의 아이템을 보여줄 경우)
+        paginator = Paginator(product_list, 2)
+
+        page_number = request.GET.get('page')
+        try:
+            products = paginator.page(page_number)
+        except PageNotAnInteger:
+            # 페이지 번호가 정수가 아닌 경우, 첫 페이지로 설정
+            products = paginator.page(1)
+        except EmptyPage:
+            # 페이지가 비어 있는 경우, 마지막 페이지로 설정
+            products = paginator.page(paginator.num_pages)
+
+        return render(request, 'customer/search.html', {'products': products, 'search_word': search_word})  
+
+
 
 ################################################## 장바구니
 
@@ -240,22 +265,75 @@ def add_to_cart(request):
     #     request.session['test'] = 12
     #     return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
 
-# 연희님 코드
+# # 연희님 코드
+# def product_detail(request, product_id):
+#     #user = request.user
+#     product = Product.objects.get(product_id=product_id)
+#     product_imgs = ProductImage.objects.filter(product = product)
+#     #cart, _ = Cart.objects.get_or_create(customer=user)
+#     #cartitem, _ = CartItem.objects.get_or_create(cart=cart, product=product)
+#     #cartitem_total_quantity = user.cartitem_set.aggregate(totalcount=Sum('quantity'))['totalcount']
+#     context = {
+#         'product':product,
+#         'product_imgs': product_imgs,
+#         #'cartitemQuantity':cartitem.quantity,
+#         #'totalCartitemQuantity':cartitem_total_quantity
+#     }
+#     return render(request, 'customer/product_detail.html', context)
+
+# 연희님 코드+캐시
 def product_detail(request, product_id):
     #user = request.user
     product = Product.objects.get(product_id=product_id)
     product_imgs = ProductImage.objects.filter(product = product)
-    #cart, _ = Cart.objects.get_or_create(customer=user)
-    #cartitem, _ = CartItem.objects.get_or_create(cart=cart, product=product)
-    #cartitem_total_quantity = user.cartitem_set.aggregate(totalcount=Sum('quantity'))['totalcount']
+    reviews = Review.objects.filter(product=product)
+
+    if request.user.is_authenticated:
+        cache_key = f'recently_viewed_{request.user.id}'
+        recently_viewed = cache.get(cache_key, [])
+        if product_id not in recently_viewed:
+            recently_viewed.append(product_id)
+            if len(recently_viewed) > 5:  # 최근 본 상품 5개로 제한
+                recently_viewed.pop(0)
+            cache.set(cache_key, recently_viewed, timeout=60*60*24*30)  # 30일 유효기간
+
     context = {
         'product':product,
         'product_imgs': product_imgs,
-        #'cartitemQuantity':cartitem.quantity,
-        #'totalCartitemQuantity':cartitem_total_quantity
+        'reviews':reviews,
     }
     return render(request, 'customer/product_detail.html', context)
   
+def create_review(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        rating = request.POST.get('rating')
+
+        if content and rating:
+            review, created = Review.objects.get_or_create(
+                product=product,
+                customer=request.user.customer,
+                defaults={'content': content, 'rating': rating}
+            )
+            if not created:
+                review.content = content
+                review.rating = rating
+                review.save()
+
+        return redirect('customer:product_detail', product_id=product.product_id)
+
+    product_imgs = ProductImage.objects.filter(product=product)
+    reviews = Review.objects.filter(product=product)
+    context = {
+        'product': product,
+        'product_imgs': product_imgs,
+        'reviews': reviews,
+    }
+    return render(request, 'customer/product_detail.html', context)
+
+
 # 장바구니 삭제 버튼
 def delete_cart_item(request, user_id):
     if request.method == 'POST':
