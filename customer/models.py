@@ -68,7 +68,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey('seller.Product', on_delete=models.SET_NULL, null=True)  # 상품 삭제 시 null로 설정
     product_name = models.CharField(max_length=100)  # 주문 당시의 상품 이름을 저장
     product_price = models.DecimalField(max_digits=10, decimal_places=2)  # 주문 당시의 상품 가격을 저장
-    quantity = models.IntegerField() 
+    quantity = models.IntegerField()
+    is_refunded = models.BooleanField(default=False)  # 환불 여부
 
     def __str__(self):
         return str(self.orderitem_id)
