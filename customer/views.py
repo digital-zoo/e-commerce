@@ -961,7 +961,8 @@ def my_shopping_list(request):
         user = request.user
         # 구매자의 모든 주문 가져오기
         orders = Order.objects.filter(customer=request.user) \
-        .prefetch_related('orderitem_set__product', 'payment_set')
+        .prefetch_related('orderitem_set__product', 'payment_set') \
+        .order_by('-order_id')
         context={
             'orders' : orders,
             }
