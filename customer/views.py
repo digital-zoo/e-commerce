@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from datetime import date
 from django.http import JsonResponse
 from django.db import transaction
@@ -738,6 +738,7 @@ def save_order(request):
         postal_code = request.POST.get('postal_code')
         recipient = request.POST.get('recipient')
         recipient_phone_number = request.POST.get('recipient_phone_number')
+        shipping_address_name = recipient + ' (집)' # 기본 이름
         # 결제 정보 불러오기
         payment_method = request.POST.get('payment_method')
         # 현재 날짜 가져오기
@@ -757,7 +758,9 @@ def save_order(request):
         OrderItem.objects.create(
                     order = order,
                     product=product,
-                    quantity=quantity
+                    quantity=quantity,
+                    product_name=product.product_name,
+                    product_price=product.price * (1-product.discount_rate)
                 )
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
@@ -765,10 +768,12 @@ def save_order(request):
                     shipping_address = shipping_address + ' ' + shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
-                    recipient_phone_number = recipient_phone_number
+                    recipient_phone_number = recipient_phone_number,
+                    shipping_address_name = shipping_address_name
                 )
         
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
+    return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
 
 @login_required
 @transaction.atomic
@@ -862,10 +867,17 @@ def save_order_from_cart(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
         # 구매자 정보 불러오기
         user = request.user
+        
         # 카트 불러오기
-        cart = Cart.objects.get(customer=user)
+        try:
+            cart = Cart.objects.get(customer=user)
+        except Cart.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '카트를 찾을 수 없습니다.'})
+        
         # 카트 아이템 불러오기
         cart_items = CartItem.objects.filter(cart=cart)
+        if not cart_items.exists():
+            return JsonResponse({'success': False, 'message': '카트에 상품이 없습니다.'})
         
         # 데이터베이스에서 가져온 제품 정보를 모아둘 리스트 생성
         product_list = []
@@ -885,6 +897,7 @@ def save_order_from_cart(request):
         postal_code = request.POST.get('postal_code')
         recipient = request.POST.get('recipient')
         recipient_phone_number = request.POST.get('recipient_phone_number')
+        shipping_address_name = recipient + ' (집)' # 기본 이름
         # 결제 정보 불러오기
         payment_method = request.POST.get('payment_method')
         # 현재 날짜 가져오기
@@ -906,7 +919,9 @@ def save_order_from_cart(request):
             OrderItem.objects.create(
                     order = order,
                     product=product,
-                    quantity=quantity
+                    quantity=quantity,
+                    product_name=product.product_name,
+                    product_price=product.price * (1-product.discount_rate)
                 )  
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
@@ -914,10 +929,12 @@ def save_order_from_cart(request):
                     shipping_address = shipping_address + ' ' + shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
-                    recipient_phone_number = recipient_phone_number
+                    recipient_phone_number = recipient_phone_number,
+                    shipping_address_name = shipping_address_name
                 )
             
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
+    return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
 
 @login_required
 @transaction.atomic
@@ -975,13 +992,18 @@ def save_payment_from_cart(request):
             
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
+# 결제가 된 주문 가져오기
+@login_required
 def order_success(request):
-    # 결제가 된 주문 가져오기
-
-    # 수정할 사항 : user 정보 넣어야함. 내것만 확인가능하도록
-
+    # 로그인한 사용자 정보 가져오기
+    user = request.user
+    # order_id 가져오기
     order_id = request.GET.get('order_id')
-    order = Order.objects.get(order_id=order_id)   
+    # order 가져오기 및 사용자 검증
+    order = get_object_or_404(Order, order_id=order_id)
+    if order.customer != user:
+        return HttpResponseForbidden("접근권한이 없는 페이지입니다.")
+
     order_items = OrderItem.objects.filter(order = order)
     payment = Payment.objects.get(order=order)
         
@@ -1017,7 +1039,8 @@ def my_shopping_list(request):
         user = request.user
         # 구매자의 모든 주문 가져오기
         orders = Order.objects.filter(customer=request.user) \
-        .prefetch_related('orderitem_set__product', 'payment_set')
+        .prefetch_related('orderitem_set__product', 'payment_set') \
+        .order_by('-order_id')
         context={
             'orders' : orders,
             }
@@ -1086,7 +1109,7 @@ def cancel_order(request, order_id):
     #     order.order_status = '부분환불'
     # order.save()
 
-    # 전체 환불처리
+    # 전체 환불처리만 가능함
     order.order_status = '환불완료'
     order.save()
 
