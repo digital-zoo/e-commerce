@@ -72,7 +72,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'digital_zoo_pj_3',
         'USER': 'postgres',
-        'PASSWORD': db_password,
+        'PASSWORD':db_password,
         'HOST': 'db.hanslab.org',  # 또는 PostgreSQL 서버의 IP 주소 211.110.169.141 'hanslab.org'
         'PORT': '25432',       # PostgreSQL의 기본 포트 번호
     }

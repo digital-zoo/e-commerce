@@ -192,6 +192,6 @@ def mf_products(user_id):
     mf = MatrixFactorization_train_model()
     predicted_ratings = mf[user_id]
 
-    item_ids = sorted(predicted_ratings, key=predicted_ratings.get, reverse=True)[:5]
+    item_ids = sorted(predicted_ratings, key=predicted_ratings.get, reverse=True)[:6]
     recommended_items = [Product.objects.get(product_id=i) for i in item_ids] 
     return recommended_items

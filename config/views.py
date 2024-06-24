@@ -53,7 +53,7 @@ class HomeView(ListView):
 
     def get_random_products(self):
         all_products = list(Product.objects.all())
-        return random.sample(all_products, min(len(all_products), 5))
+        return random.sample(all_products, min(len(all_products), 6))
 
 
 
