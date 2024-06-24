@@ -113,7 +113,7 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR/'static']
 
 # Default primary key field type
@@ -132,3 +132,5 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # 기본 인증 백엔드
     'seller.backends.SellerAuthenticationBackend', # Seller 인증 백엔드
 ]
+
+CSRF_TRUSTED_ORIGINS = ['http://54.180.183.219:8080']
