@@ -1008,7 +1008,7 @@ def cancel_order(request, order_id):
     #     order.order_status = '부분환불'
     # order.save()
 
-    # 전체 환불처리
+    # 전체 환불처리만 가능함
     order.order_status = '환불완료'
     order.save()
 
