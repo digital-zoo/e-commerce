@@ -1,84 +1,120 @@
-from django.test import TestCase, Client
+from django.test import TestCase, RequestFactory
 from django.urls import reverse
-from django.contrib.auth.models import User
-from customer.models import Order, OrderItem
-from seller.models import Product
-from django.utils import timezone
+from rest_framework.test import APIClient
+from rest_framework import status
+from .models import *
+from seller.models import *
+from customer.views import cancel_order
+from datetime import date
 
-class OrderTestCase(TestCase):
+class CancelOrderAPITests(TestCase):
     def setUp(self):
-        # 테스트용 유저 생성
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        # 테스트용 상품 생성
-        self.product = Product.objects.create(product_id='1', name='Test Product', stock=10, price=1000)
-        # 테스트용 클라이언트 설정
-        self.client = Client()
-        self.client.login(username='yeonhuitester', password='hhhh1111')
-        # 주문 URL 설정
-        self.order_url = reverse('save_order')
-        self.cancel_url = lambda order_id: reverse('order-cancel', args=[order_id])
+        # 필요한 모델 객체들을 생성합니다.
 
-    def test_save_order_success(self):
-        response = self.client.post(self.order_url, {
-            'product_id': self.product.product_id,
-            'quantity': 2,
-            'shipping_address': 'Test Address',
-            'shipping_address_detail': 'Detail',
-            'postal_code': '12345',
-            'recipient': 'Test Recipient',
-            'recipient_phone_number': '01012345678',
-            'payment_method': 'card'
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Order.objects.count(), 1)
-        self.assertEqual(OrderItem.objects.count(), 1)
-        self.assertEqual(OrderItem.objects.first().quantity, 2)
+        # Membership 객체 생성
+        self.membership = Membership.objects.create(
+            membership_id=1,
+            grade='test',
+            member_discount_rate=1  # 10% 할인율
+        )
 
-    def test_save_order_insufficient_stock(self):
-        response = self.client.post(self.order_url, {
-            'product_id': self.product.product_id,
-            'quantity': 20,
-            'shipping_address': 'Test Address',
-            'shipping_address_detail': 'Detail',
-            'postal_code': '12345',
-            'recipient': 'Test Recipient',
-            'recipient_phone_number': '01012345678',
-            'payment_method': 'card'
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertJSONEqual(response.content, {'success': False, 'message': '현재 상품의 재고가 충분하지 않습니다'})
-        self.assertEqual(Order.objects.count(), 0)
-        self.assertEqual(OrderItem.objects.count(), 0)
+        # 고객 객체 생성
+        self.customer = Customer.objects.create_user(
+            membership_id=self.membership.membership_id,
+            customer_name='testcustomer',
+            username='testcustomer',
+            email='testcustomer@naver.com',
+            phone_number='01011112222'
+        )
 
-    def test_save_order_missing_fields(self):
-        response = self.client.post(self.order_url, {
-            'product_id': self.product.product_id,
-            'quantity': 2,
-            'shipping_address': 'Test Address',
-            'shipping_address_detail': 'Detail',
-            'postal_code': '12345',
-            # 'recipient': 'Test Recipient',  # 필수 필드를 일부러 누락
-            'recipient_phone_number': '01012345678',
-            'payment_method': 'card'
-        })
-        self.assertEqual(response.status_code, 400)  # 필수 필드가 누락된 경우, 적절한 상태 코드를 반환해야 함
+        # 판매자 객체 생성
+        self.seller = Seller.objects.create_user(
+            company_name='testcompany',
+            registration_number='123412341234',
+            username='testseller',
+            email='testseller@naver.com',
+            phone_number='01022223333'
+        )
 
-    def test_cancel_order(self):
-        # Create order first
-        order = Order.objects.create(
-            customer=self.user,
-            order_date=timezone.now(),
-            order_status='주문중',
-            shipping_address='Test Address Detail',
+        # 카테고리 객체 생성
+        self.category = Category.objects.create(
+            category_id=1,
+            category_name='testcategory'
+        )
+
+        # 상품 객체 생성
+        self.product = Product.objects.create(
+            product_id=1,
+            seller=self.seller,
+            category=self.category,
+            product_name='Test Product',
+            price=10000,
+            description='This is a test product.',
+            is_visible=True,
+            stock=50,
+            discount_rate=0.10,
+            is_option=True
+        )
+
+        # 주문 객체 생성
+        self.order = Order.objects.create(
+            order_id=1,
+            customer=self.customer,
+            order_date=date.today(),
+            order_status='결제완료',
+            shipping_address='Test Address',
             postal_code='12345',
             recipient='Test Recipient',
             recipient_phone_number='01012345678',
-            payment_method='card',
-            imp_uid='imp_123456789'
+            payment_method='신용카드'
         )
-        OrderItem.objects.create(order=order, product=self.product, quantity=2)
-        
-        # Cancel order
-        response = self.client.post(self.cancel_url(order.id), {'reason': '취소 요청'})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Order.objects.get(id=order.id).order_status, 'cancelled')
+
+        # 결제 정보 객체 생성
+        self.payment = Payment.objects.create(
+            payment_id=1,
+            order=self.order,
+            paid_amount=10000,  # 결제 금액
+            imp_uid='imp_uid_test',
+            merchant_uid='merchant_uid_test'
+        )
+
+        # # API 클라이언트 인스턴스 생성
+        # self.client = APIClient()
+
+        # 장바구니 추가 URL
+        self.cancel_order_url = reverse('customer:cancel_order')
+
+        # RequestFactory 인스턴스 생성
+        self.factory = RequestFactory()
+
+        # cart와 cartitem 생성
+
+    def test_cancel_order_authenticated(self):
+        # 인증된 고객으로 로그인 상태를 설정합니다.
+        self.client.login(username=self.customer.username, password=self.customer.password)
+
+        # POST 요청 보낼 데이터 준비
+        data = {}
+
+
+
+
+
+
+        # API의 URL Reverse
+        url = reverse('cancel_order', args=[self.order.order_id])
+
+        # POST 요청 보낼 데이터 준비
+        data = {}
+
+        # POST 요청 보내기
+        response = self.client.post(url, data, format='json')
+
+        # 응답 코드 확인
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 주문 상태가 '환불완료'로 변경되었는지 확인
+        updated_order = Order.objects.get(order_id=self.order.order_id)
+        self.assertEqual(updated_order.order_status, '환불완료')
+
+        # 추가적으로 필요한 응답 데이터에 대한 확인은 상황에 따라 추가할 수 있습니다.
