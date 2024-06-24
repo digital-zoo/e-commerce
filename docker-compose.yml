@@ -39,3 +39,4 @@ services:
 volumes:
   db_data:
   static_volume:
+  media_volume: 
