@@ -492,7 +492,7 @@ def delete_guest_cart_item(request):
             
             else: # 삭제 후 남은 물건이 없는 경우
                 response = JsonResponse({'success': True, 'total_price': 0, 'discount_price': 0, 'final_price': 0})
-                response.delete_cookie(product_id)
+                response.delete_cookie(str(delete_product_id))
                 return response
         
         except Exception as e:
@@ -536,7 +536,7 @@ def update_guest_cart_quantity(request):
         'total_price': sum(item['total_price'] for item in cart_item_list),
         'discount_price': int(sum(item['product'].discount_rate * item['total_price'] for item in cart_item_list)),
         'final_price': sum(item['total_price'] * (1 - item['product'].discount_rate) for item in cart_item_list),
-        'one_price' : [{'product_id': item['product_id'], 'price': item['product'].price} for item in cart_item_list]
+        'one_price' : [item['final_price'] for item in cart_item_list if item['product_id'] == int(update_product_id)]
         })
     for item in cart_item_list:
         response.set_cookie(str(item['product_id']), str(item['quantity']))
