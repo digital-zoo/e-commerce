@@ -154,12 +154,45 @@ def search_product(request):
 
 
 ################################################## 장바구니
+from collections import defaultdict
 
 # 장바구니 상세 페이지 처리    
 def cart(request, pk):
-    cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
-    cartitem = CartItem.objects.filter(cart_id=cart.cart_id) # 해당 유저의 장바구니에 속한 모든 아이템들
-    if cartitem: # 장바구니에 물건이 있는 경우 
+    cart_data = request.COOKIES
+
+    has_numeric_key = False
+    for key in cart_data.keys():
+        if key.isdigit():
+            has_numeric_key = True
+            break
+    
+    if has_numeric_key: # 쿠키에 상품 데이터가 존재한다면
+
+        cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
+
+        
+        # 쿠키 장바구니 데이터 파싱
+        cart_items = defaultdict(int)
+        for key, value in cart_data.items():
+            if key.isdigit():
+                product_id, quantity = int(key), int(value)
+                cart_items[product_id] = quantity
+
+        
+        # DB에 쿠키 장바구니 데이터 삽입
+        for product_id, quantity in cart_items.items():
+            cart_item = CartItem.objects.filter(cart_id=cart.cart_id, product_id=product_id).first()
+            if cart_item:
+                item = CartItem.objects.get(cart_id=cart.cart_id, product_id=product_id)
+                item.quantity = quantity
+                item.save()
+            else:
+                CartItem.objects.create(cart_id=cart.cart_id,
+                                        product_id=product_id,
+                                        quantity=quantity)
+        
+        cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
+
         # "item_total"이라는 필드 생성, 해당 필드에는 각 아이뎀의 수량과 가격을 곱한 아이템별 가격 표시 -> 집계 함수를 통해 총 가격 표현
         total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total'] 
         # 할인이 적용된 가격을 표현
@@ -172,17 +205,45 @@ def cart(request, pk):
             'final_price' : discount_price,
             
         }
-        return render(request, 'customer/cart_list.html', context)
-    
-    else: # 장바구니에 물건이 없는 경우
-        context = {
-            'object' : cartitem,
-            'total_price' : 0,
-            'discount_price' : 0,
-            'final_price' : 0,
+
+        # 렌더링된 응답 생성
+        response = render(request, 'customer/cart_list.html', context)
+        
+        # 숫자 키를 가진 모든 쿠키 삭제
+        for key in cart_data.keys():
+            if key.isdigit():
+                response.delete_cookie(key)
+
+        return response
             
-        }
-        return render(request, 'customer/cart_list.html', context)
+
+    else:
+        cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
+        cartitem = CartItem.objects.filter(cart_id=cart.cart_id) # 해당 유저의 장바구니에 속한 모든 아이템들
+        if cartitem: # 장바구니에 물건이 있는 경우 
+            # "item_total"이라는 필드 생성, 해당 필드에는 각 아이뎀의 수량과 가격을 곱한 아이템별 가격 표시 -> 집계 함수를 통해 총 가격 표현
+            total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total'] 
+            # 할인이 적용된 가격을 표현
+            discount_price = cartitem.annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+
+            context = {
+                'object' : cartitem,
+                'total_price' : total_price,
+                'discount_price' : total_price - discount_price,
+                'final_price' : discount_price,
+                
+            }
+            return render(request, 'customer/cart_list.html', context)
+        
+        else: # 장바구니에 물건이 없는 경우
+            context = {
+                'object' : cartitem,
+                'total_price' : 0,
+                'discount_price' : 0,
+                'final_price' : 0,
+                
+            }
+            return render(request, 'customer/cart_list.html', context)
 
 from .forms import CartItemForm # 폼을 활용한 데이터 유효성 검사
 from datetime import datetime, timedelta
@@ -401,7 +462,6 @@ def update_quantity(request, user_id):
 #     })
 
 ########################################## 세션 장바구니
-from collections import defaultdict
 
 def guest_cart(request):
    # 쿠키에서 장바구니 데이터 가져오기
