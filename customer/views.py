@@ -819,13 +819,15 @@ def save_order(request):
                     order = order,
                     product=product,
                     quantity=quantity,
-                    product_name=product.product_name,
-                    product_price=product.price * (1-product.discount_rate)
+                    # 아래 값은 모델에서 자동으로 생성, 저장
+                    # product_name=product.product_name,
+                    # product_price= product.price * (1 - float(product.discount_rate))
                 )
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
                     customer = user,
-                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    shipping_address = shipping_address,
+                    shipping_address_detail = shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
                     recipient_phone_number = recipient_phone_number,
@@ -980,13 +982,15 @@ def save_order_from_cart(request):
                     order = order,
                     product=product,
                     quantity=quantity,
-                    product_name=product.product_name,
-                    product_price=product.price * (1-product.discount_rate)
+                    # 아래 값은 모델에서 자동으로 생성, 저장
+                    # product_name=product.product_name,
+                    # product_price= product.price * (1 - float(product.discount_rate))
                 )  
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
                     customer = user,
-                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    shipping_address = shipping_address,
+                    shipping_address_detail = shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
                     recipient_phone_number = recipient_phone_number,
@@ -1098,11 +1102,12 @@ def my_shopping_list(request):
         # 구매자 정보 불러오기
         user = request.user
         # 구매자의 모든 주문 가져오기
-        orders = Order.objects.filter(customer=request.user) \
+        orders = Order.objects.filter(customer=user) \
         .prefetch_related('orderitem_set__product', 'payment_set') \
         .order_by('-order_id')
+
         context={
-            'orders' : orders,
+            'orders' : orders
             }
         return render(request,"customer/my_shopping.html", context)
     
@@ -1125,16 +1130,18 @@ def get_access_token():
 # 주문 취소 (결제된 상품이면 환불 포함)
 @login_required
 @transaction.atomic
-def cancel_order(request, order_id):
+def cancel_order(request, orderitem_id):
+    order_item = get_object_or_404(OrderItem, pk=orderitem_id, order__customer=request.user, is_refunded=False)
+    
     # 결제완료(카드)일 경우만 주문 취소 기능 활성화 + 결제대기(통장)의 경우 추가 가능
-    order = get_object_or_404(Order, pk=order_id, customer=request.user)
+    order = order_item.order
     if order.order_status not in ['결제완료', '부분환불']:
         return JsonResponse({'code': 1, 'message': '주문 취소가 불가능한 상태입니다.'})
     
     # 취소/환불할 상품의 결제 정보가져오기 (결제가 완료된 상태에 한해 진행 중)
     payment = Payment.objects.get(order=order)
     imp_uid = payment.imp_uid
-    item_types_count = order.orderitem_set.count() # 테스트용 결제 금액 계산용
+    # item_types_count = order.orderitem_set.count() # 테스트용 결제 금액 계산용
 
     # api 통신 토큰 생성 (30분 유효)
     token = get_access_token()
@@ -1145,7 +1152,7 @@ def cancel_order(request, order_id):
     }
     payload = {
         'imp_uid': imp_uid,  # 포트원 주문번호
-        'amount' : 100*item_types_count, # 취소한 상품의 결제 금액만큼 취소 (부분취소는 orderitem 구조에 결제상태&환불금액 정보 기입후 사용)
+        'amount' : 100, # 한 주문건(오더아이템)당 100원으로 테스트
         'reason': '고객 요청', 
     }
     
@@ -1160,18 +1167,18 @@ def cancel_order(request, order_id):
         # API에서 오류가 발생한 경우
         return JsonResponse({'code': 3, 'message': f'결제 취소 중 오류가 발생했습니다: {result.get("message")}'})
 
-    # 모델 수정 후 부분 취소 가능
-    # # 결제 금액과 취소 금액 비교하여 주문 상태 업데이트
-    # cancel_amount = result.get('response', {}).get('cancel_amount', 0)
-    # if cancel_amount >= payment.paid_amount:
-    #     order.order_status = '환불완료'
-    # else:
-    #     order.order_status = '부분환불'
-    # order.save()
-
-    # 전체 환불처리만 가능함
-    order.order_status = '환불완료'
+    # 주문아이템 상태 업데이트 (환불처리)
+    order_item.is_refunded = True
+    order_item.save()
+        
+    # 주문 상태 업데이트
+    all_items = order.orderitem_set.all()
+    if all(item.is_refunded for item in all_items):
+            order.order_status = "환불완료"
+    elif any(item.is_refunded for item in all_items):
+            order.order_status = "부분환불"
     order.save()
 
-    return JsonResponse(response.json())
+    return JsonResponse({"code": 0, "message": "주문 아이템이 성공적으로 취소되었습니다.", "order_status": order.order_status, "item_status": order_item.is_refunded})
+    
 

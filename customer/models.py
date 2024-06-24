@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth import get_user_model
 from myuser.models import MyUser
 from django.contrib.auth.models import Group, Permission
+from decimal import Decimal
 
 # 멤버쉽 테이블\\
 class Membership(models.Model):
@@ -77,7 +78,7 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         if self.product:
             self.product_name = self.product.product_name
-            self.product_price = self.product.price
+            self.product_price = Decimal(self.product.price * (1 - self.product.discount_rate))
         super(OrderItem, self).save(*args, **kwargs)
     
 class Payment(models.Model):
