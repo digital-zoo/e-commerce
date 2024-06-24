@@ -11,6 +11,8 @@ urlpatterns = [
     path('cart/update_quantity/<int:user_id>/', views.update_quantity, name='update_quantity'), # 장바구니 내 수량 변경 url
     #path('cart/get_cart_summary/<int:user_id>/', views.get_cart_summary, name='get_cart_summary'), # 수량에 따른 가격 변경 처리 url
     path('cart/guest/', views.guest_cart, name='guest_cart'), # 비회원 장바구니 url
+    path('cart/guest/delete', views.delete_guest_cart_item, name='delete_guest_cart_item'),
+    path('cart/guest/update_quantity', views.update_guest_cart_quantity, name='update_guest_cart_quantity'),
 
     path('quick_checkout/', quick_checkout, name='quick_checkout'),
     path('cart_checkout/', cart_checkout, name='cart_checkout'),

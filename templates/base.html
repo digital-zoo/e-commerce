@@ -78,7 +78,7 @@
             {% if user.is_authenticated and user.customer_name is not none%}
               <a href="{% url 'customer:cart' user.id %}" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
             {% else %}
-              <a href="#" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
+              <a href="{% url 'customer:guest_cart' %}" class="link-body-emphasis text-decoration-none mx-2">장바구니</a>
             {% endif %}
         </div>
     </div>
