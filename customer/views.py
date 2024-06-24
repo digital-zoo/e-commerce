@@ -660,6 +660,7 @@ def save_order(request):
         postal_code = request.POST.get('postal_code')
         recipient = request.POST.get('recipient')
         recipient_phone_number = request.POST.get('recipient_phone_number')
+        shipping_address_name = recipient + ' (집)' # 기본 이름
         # 결제 정보 불러오기
         payment_method = request.POST.get('payment_method')
         # 현재 날짜 가져오기
@@ -679,7 +680,9 @@ def save_order(request):
         OrderItem.objects.create(
                     order = order,
                     product=product,
-                    quantity=quantity
+                    quantity=quantity,
+                    product_name=product.product_name,
+                    product_price=product.price * (1-product.discount_rate)
                 )
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
@@ -687,10 +690,12 @@ def save_order(request):
                     shipping_address = shipping_address + ' ' + shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
-                    recipient_phone_number = recipient_phone_number
+                    recipient_phone_number = recipient_phone_number,
+                    shipping_address_name = shipping_address_name
                 )
         
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
+    return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
 
 @login_required
 @transaction.atomic
@@ -838,7 +843,7 @@ def save_order_from_cart(request):
                     product=product,
                     quantity=quantity,
                     product_name=product.product_name,
-                    product_price=product.price
+                    product_price=product.price * (1-product.discount_rate)
                 )  
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
@@ -847,7 +852,7 @@ def save_order_from_cart(request):
                     postal_code = postal_code,
                     recipient = recipient,
                     recipient_phone_number = recipient_phone_number,
-                    shipping_address_name=shipping_address_name
+                    shipping_address_name = shipping_address_name
                 )
             
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
