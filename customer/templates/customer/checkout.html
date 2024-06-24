@@ -62,7 +62,7 @@
 <br><br>
 
 <!-- 배송지 목록 팝업창 -->
-<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -73,8 +73,15 @@
                 <ul id="addressList">
                     {% for address in shipping_addresses %}
                     <li>
-                        <a href="#" data-postal-code="{{ address.postal_code }}" data-address="{{ address.shipping_address }}" data-recipient="{{ address.recipient }}" data-phone-number="{{ address.recipient_phone_number }}">
-                            {{ address.shipping_address }}, {{ address.recipient }}, {{ address.recipient_phone_number }}
+                        <a href="#" data-postal-code="{{ address.postal_code }}" data-address="{{ address.shipping_address }}" data-address-detail="{{ address.shipping_address_detail }}" data-recipient="{{ address.recipient }}" data-phone-number="{{ address.recipient_phone_number }}">
+                            <div style="margin-bottom: 10px;">
+                                <strong>{{ address.shipping_address_name }}</strong>
+                                <br>
+                                <span>받는 사람: {{ address.recipient }} ({{ address.recipient_phone_number }})</span>
+                            </div>
+                            <div>
+                                <span>{{ address.shipping_address }}, {{ address.shipping_address_detail }} [{{ address.postal_code }}]</span>
+                            </div>
                         </a>
                     </li>
                     {% endfor %}
@@ -162,11 +169,13 @@
             
             var postalCode = this.getAttribute('data-postal-code');
             var address = this.getAttribute('data-address');
+            var address_detail = this.getAttribute('data-address-detail');
             var recipient = this.getAttribute('data-recipient');
             var phoneNumber = this.getAttribute('data-phone-number');
             
             document.getElementById('postal_code').value = postalCode;
             document.getElementById('shipping_address').value = address;
+            document.getElementById('shipping_address_detail').value = address_detail;
             document.getElementById('recipient').value = recipient;
             document.getElementById('recipient_phone_number').value = phoneNumber;
             
@@ -175,7 +184,7 @@
             addressModal.hide();
         });
     });
-    </script>    
+    </script>   
 
 <script>
     // 입력한 수령인 전화번호 유효성 검사  
@@ -316,4 +325,80 @@
     });
 }
 </script>
+
+<style>
+    /* Modal header style */
+.modal-header {
+    background-color: #007bff; /* Header 배경색 */
+    color: white; /* Header 글자색 */
+    border-bottom: none; /* Header 하단 테두리 없애기 */
+}
+
+/* Modal body style */
+.modal-body {
+    padding: 20px; /* 내용 여백 추가 */
+}
+
+/* List group item style */
+.list-group-item {
+    border: none; /* 리스트 아이템 테두리 없애기 */
+}
+
+/* Address link style */
+.address-link {
+    color: #007bff; /* 링크 색상 */
+    text-decoration: none; /* 링크 밑줄 제거 */
+    display: block; /* 블록 레벨 요소로 변환 */
+    transition: background-color 0.3s; /* 배경색 전환 효과 */
+    padding: 10px; /* 링크 안 여백 추가 */
+}
+
+.address-link:hover {
+    background-color: #f0f8ff; /* 호버시 배경색 변경 */
+}
+
+/* Address item style */
+.address-item {
+    margin-bottom: 10px; /* 주소 아이템 간 여백 추가 */
+}
+
+/* Address detail style */
+.address-detail {
+    margin-top: 5px; /* 주소 세부 정보 위 여백 추가 */
+    font-size: 0.9em; /* 폰트 크기 줄이기 */
+    color: #6c757d; /* 주소 세부 정보 색상 */
+}
+
+.address-item {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.address-detail {
+    font-size: 14px;
+    color: #666;
+}
+
+#addressList {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#addressList li {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#addressList a {
+    text-decoration: none;
+    color: #333;
+}
+
+#addressList a:hover {
+    text-decoration: underline;
+}
+
+</style>
 {% endblock %}

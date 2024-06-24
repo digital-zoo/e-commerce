@@ -759,13 +759,15 @@ def save_order(request):
                     order = order,
                     product=product,
                     quantity=quantity,
-                    product_name=product.product_name,
-                    product_price=product.price * (1-product.discount_rate)
+                    # 아래 값은 모델에서 자동으로 생성, 저장
+                    # product_name=product.product_name,
+                    # product_price= product.price * (1 - float(product.discount_rate))
                 )
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
                     customer = user,
-                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    shipping_address = shipping_address,
+                    shipping_address_detail = shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
                     recipient_phone_number = recipient_phone_number,
@@ -920,13 +922,15 @@ def save_order_from_cart(request):
                     order = order,
                     product=product,
                     quantity=quantity,
-                    product_name=product.product_name,
-                    product_price=product.price * (1-product.discount_rate)
+                    # 아래 값은 모델에서 자동으로 생성, 저장
+                    # product_name=product.product_name,
+                    # product_price= product.price * (1 - float(product.discount_rate))
                 )  
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
                     customer = user,
-                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    shipping_address = shipping_address,
+                    shipping_address_detail = shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
                     recipient_phone_number = recipient_phone_number,
