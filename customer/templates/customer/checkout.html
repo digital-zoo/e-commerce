@@ -67,7 +67,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addressModalLabel">배송지 목록</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" id="modal-close" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <ul id="addressList">
@@ -179,12 +179,13 @@
             document.getElementById('recipient').value = recipient;
             document.getElementById('recipient_phone_number').value = phoneNumber;
             
-            // 팝업창 닫기
-            var addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
-            addressModal.hide();
+            // 창 닫기
+            document.querySelector('#modal-close').addEventListener('click',function(){
+                document.querySelector('.black-bg').classList.add('noshow');
+            })
         });
     });
-    </script>   
+</script>   
 
 <script>
     // 입력한 수령인 전화번호 유효성 검사  
