@@ -33,7 +33,7 @@ urlpatterns = [
     path('mypage/delete_customer/', delete_customer_view, name='delete_customer'),   
 
     path('mypage/my_shopping/', my_shopping_list, name='my_shopping_list'), 
-    path('cancel_order/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('cancel_order/<int:orderitem_id>/', views.cancel_order, name='cancel_order'),
 
     path('<int:category_id>/', CategoryList.as_view(),name='category_list'),#선택된 카테고리 보기
     path('<int:category_id>/<str:sorted_by>/', CategorySortedList.as_view() ,name='category_sorted_list'),#선택된 카테고리에서 기준에 따라 정렬
