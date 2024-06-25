@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from datetime import date
 from django.http import JsonResponse
 from django.db import transaction
@@ -17,84 +17,93 @@ import json
 import requests
 import os
 from dotenv import load_dotenv
+from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Count
 
-# Create your views here.
+
 class CategoryList(ListView):
-    template_name='customer/product_category.html'
-    paginate_by=2
+    template_name = 'customer/product_category.html'
+    paginate_by = 12  # 페이지당 2개의 아이템을 보여줄 예정입니다
 
-    #필요한 데이터 가져오기
     def get_queryset(self):
-        product_queryset = Product.objects.all()
-        category_queryset = Category.objects.all()
-        return list(product_queryset) + list(category_queryset)    
+        # 카테고리 ID를 가져옵니다.
+        category_id = self.kwargs['category_id']
+        # 선택된 카테고리에 해당하는 상품들만 필터링합니다.
+        category = Category.objects.get(category_id=category_id)
+        queryset = Product.objects.filter(category=category)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #category_id인자 받아오기
+        # 카테고리 ID를 가져옵니다.
         category_id = self.kwargs['category_id']
-        #선택된 카테고리에 해당하는 상품들만 추출
-        category=Category.objects.get(category_id=category_id)
-        context['products'] =  Product.objects.filter(category=category)
+        category = Category.objects.get(category_id=category_id)
+        
+        # 페이지네이션을 위해 Paginator 객체를 생성합니다.
+        product_list = self.get_queryset()
+        paginator = Paginator(product_list, self.paginate_by)
+        
+        page_number = self.request.GET.get('page')
+        try:
+            products = paginator.page(page_number)
+        except PageNotAnInteger:
+            # 페이지 번호가 정수가 아닌 경우, 첫 페이지로 설정합니다.
+            products = paginator.page(1)
+        except EmptyPage:
+            # 페이지가 비어 있는 경우, 마지막 페이지로 설정합니다.
+            products = paginator.page(paginator.num_pages)
+        
+        context['products'] = products
         context['categories'] = Category.objects.all()
         context['current_category'] = category
         context['current_sorted_by'] = ''
         return context
-
-from django.db.models import Count
-class SortedList(ListView):
-    template_name='home.html'
-        
-    model = Product
-    context_object_name = 'products'  
-        
-    def get_queryset(self):
-        sorted_by = self.kwargs['sorted_by']
-        if sorted_by == 'newest':
-            return Product.objects.order_by('-discount_rate')
-        elif sorted_by == 'order':
-            return Product.objects.annotate(num_orders=Count('orderitem')).order_by('-num_orders')
-        elif sorted_by == 'like':
-            return Product.objects.annotate(num_likes=Count('like')).order_by('-num_likes')
-        else:
-            return Product.objects.all()
-        
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
-        context['current_sorted_by'] = self.kwargs['sorted_by']
-        return context
+    
 
 class CategorySortedList(ListView):
-    template_name='customer/product_category.html'
-        
-    model = Product
-    context_object_name = 'products'  
-        
+    template_name = 'customer/product_category.html'
+    paginate_by = 12  # 페이지당 2개의 아이템을 보여줄 예정입니다
+
     def get_queryset(self):
         sorted_by = self.kwargs['sorted_by']
         category_id = self.kwargs['category_id']
-        #선택된 카테고리에 해당하는 상품들만 추출
-        category=Category.objects.get(category_id=category_id)
+        category = Category.objects.get(category_id=category_id)
         products = Product.objects.filter(category=category)
-        
+
         if sorted_by == 'newest':
-            return products.order_by('-discount_rate')
+            queryset = products.order_by('-discount_rate')
         elif sorted_by == 'order':
-            return products.annotate(num_orders=Count('orderitem')).order_by('-num_orders')
+            queryset = products.annotate(num_orders=Count('orderitem')).order_by('-num_orders')
         elif sorted_by == 'like':
-            return products.annotate(num_likes=Count('like')).order_by('-num_likes')
+            queryset = products.annotate(num_likes=Count('like')).order_by('-num_likes')
         else:
-            return products.all()
-        
+            queryset = products.all()
+
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_id = self.kwargs['category_id']
-        #선택된 카테고리에 해당하는 상품들만 추출
-        category=Category.objects.get(category_id=category_id)
+        category = Category.objects.get(category_id=category_id)
+        
+        # 선택된 카테고리에 해당하는 상품들만 추출하여 Paginator 객체 생성
+        product_list = self.get_queryset()
+        paginator = Paginator(product_list, self.paginate_by)
+        
+        page_number = self.request.GET.get('page')
+        try:
+            products = paginator.page(page_number)
+        except PageNotAnInteger:
+            products = paginator.page(1)
+        except EmptyPage:
+            products = paginator.page(paginator.num_pages)
+        
+        context['products'] = products
         context['categories'] = Category.objects.all()
-        context['current_sorted_by'] = self.kwargs['sorted_by']
         context['current_category'] = category
+        context['current_sorted_by'] = self.kwargs['sorted_by']
         return context
 
 def like_product(request,product_id):
@@ -126,15 +135,64 @@ def search_product(request):
             # 검색 결과를 템플릿에 전달
         else:
             product_list = []
-        return render(request, 'customer/search.html', {'products': product_list, 'search_word': search_word})  
+
+        # Paginator 객체 생성 (한 페이지당 10개의 아이템을 보여줄 경우)
+        paginator = Paginator(product_list, 12)
+
+        page_number = request.GET.get('page')
+        try:
+            products = paginator.page(page_number)
+        except PageNotAnInteger:
+            # 페이지 번호가 정수가 아닌 경우, 첫 페이지로 설정
+            products = paginator.page(1)
+        except EmptyPage:
+            # 페이지가 비어 있는 경우, 마지막 페이지로 설정
+            products = paginator.page(paginator.num_pages)
+
+        return render(request, 'customer/search.html', {'products': products, 'search_word': search_word})  
+
+
 
 ################################################## 장바구니
+from collections import defaultdict
 
 # 장바구니 상세 페이지 처리    
 def cart(request, pk):
-    cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
-    cartitem = CartItem.objects.filter(cart_id=cart.cart_id) # 해당 유저의 장바구니에 속한 모든 아이템들
-    if cartitem: # 장바구니에 물건이 있는 경우 
+    cart_data = request.COOKIES
+
+    has_numeric_key = False
+    for key in cart_data.keys():
+        if key.isdigit():
+            has_numeric_key = True
+            break
+    
+    if has_numeric_key: # 쿠키에 상품 데이터가 존재한다면
+
+        cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
+
+        
+        # 쿠키 장바구니 데이터 파싱
+        cart_items = defaultdict(int)
+        for key, value in cart_data.items():
+            if key.isdigit():
+                product_id, quantity = int(key), int(value)
+                cart_items[product_id] = quantity
+
+        
+        # DB에 쿠키 장바구니 데이터 삽입
+        for product_id, quantity in cart_items.items():
+            cart_item = CartItem.objects.filter(cart_id=cart.cart_id, product_id=product_id).first()
+            if cart_item:
+                item = CartItem.objects.get(cart_id=cart.cart_id, product_id=product_id)
+                item.quantity = quantity
+                item.save()
+            else:
+                CartItem.objects.create(cart_id=cart.cart_id,
+                                        product_id=product_id,
+                                        quantity=quantity)
+        
+        cartitem = CartItem.objects.filter(cart_id=cart.cart_id)
+
         # "item_total"이라는 필드 생성, 해당 필드에는 각 아이뎀의 수량과 가격을 곱한 아이템별 가격 표시 -> 집계 함수를 통해 총 가격 표현
         total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total'] 
         # 할인이 적용된 가격을 표현
@@ -147,17 +205,45 @@ def cart(request, pk):
             'final_price' : discount_price,
             
         }
-        return render(request, 'customer/cart_list.html', context)
-    
-    else: # 장바구니에 물건이 없는 경우
-        context = {
-            'object' : cartitem,
-            'total_price' : 0,
-            'discount_price' : 0,
-            'final_price' : 0,
+
+        # 렌더링된 응답 생성
+        response = render(request, 'customer/cart_list.html', context)
+        
+        # 숫자 키를 가진 모든 쿠키 삭제
+        for key in cart_data.keys():
+            if key.isdigit():
+                response.delete_cookie(key)
+
+        return response
             
-        }
-        return render(request, 'customer/cart_list.html', context)
+
+    else:
+        cart, _ = Cart.objects.get_or_create(customer_id=pk) # 장바구니가 있으면 get, 없으면 create
+        cartitem = CartItem.objects.filter(cart_id=cart.cart_id) # 해당 유저의 장바구니에 속한 모든 아이템들
+        if cartitem: # 장바구니에 물건이 있는 경우 
+            # "item_total"이라는 필드 생성, 해당 필드에는 각 아이뎀의 수량과 가격을 곱한 아이템별 가격 표시 -> 집계 함수를 통해 총 가격 표현
+            total_price = cartitem.annotate(item_total=F('quantity') * F('product__price')).aggregate(total=Sum('item_total'))['total'] 
+            # 할인이 적용된 가격을 표현
+            discount_price = cartitem.annotate(discounted_price=F('quantity') * F('product__price') * (1 - F('product__discount_rate'))).aggregate(total=Sum('discounted_price', output_field=FloatField()))['total']
+
+            context = {
+                'object' : cartitem,
+                'total_price' : total_price,
+                'discount_price' : total_price - discount_price,
+                'final_price' : discount_price,
+                
+            }
+            return render(request, 'customer/cart_list.html', context)
+        
+        else: # 장바구니에 물건이 없는 경우
+            context = {
+                'object' : cartitem,
+                'total_price' : 0,
+                'discount_price' : 0,
+                'final_price' : 0,
+                
+            }
+            return render(request, 'customer/cart_list.html', context)
 
 from .forms import CartItemForm # 폼을 활용한 데이터 유효성 검사
 from datetime import datetime, timedelta
@@ -240,22 +326,75 @@ def add_to_cart(request):
     #     request.session['test'] = 12
     #     return JsonResponse({'message': 'Item added to cart successfully', 'added': True}, status=200)
 
-# 연희님 코드
+# # 연희님 코드
+# def product_detail(request, product_id):
+#     #user = request.user
+#     product = Product.objects.get(product_id=product_id)
+#     product_imgs = ProductImage.objects.filter(product = product)
+#     #cart, _ = Cart.objects.get_or_create(customer=user)
+#     #cartitem, _ = CartItem.objects.get_or_create(cart=cart, product=product)
+#     #cartitem_total_quantity = user.cartitem_set.aggregate(totalcount=Sum('quantity'))['totalcount']
+#     context = {
+#         'product':product,
+#         'product_imgs': product_imgs,
+#         #'cartitemQuantity':cartitem.quantity,
+#         #'totalCartitemQuantity':cartitem_total_quantity
+#     }
+#     return render(request, 'customer/product_detail.html', context)
+
+# 연희님 코드+캐시
 def product_detail(request, product_id):
     #user = request.user
     product = Product.objects.get(product_id=product_id)
     product_imgs = ProductImage.objects.filter(product = product)
-    #cart, _ = Cart.objects.get_or_create(customer=user)
-    #cartitem, _ = CartItem.objects.get_or_create(cart=cart, product=product)
-    #cartitem_total_quantity = user.cartitem_set.aggregate(totalcount=Sum('quantity'))['totalcount']
+    reviews = Review.objects.filter(product=product)
+
+    if request.user.is_authenticated:
+        cache_key = f'recently_viewed_{request.user.id}'
+        recently_viewed = cache.get(cache_key, [])
+        if product_id not in recently_viewed:
+            recently_viewed.append(product_id)
+            if len(recently_viewed) > 5:  # 최근 본 상품 5개로 제한
+                recently_viewed.pop(0)
+            cache.set(cache_key, recently_viewed, timeout=60*60*24*30)  # 30일 유효기간
+
     context = {
         'product':product,
         'product_imgs': product_imgs,
-        #'cartitemQuantity':cartitem.quantity,
-        #'totalCartitemQuantity':cartitem_total_quantity
+        'reviews':reviews,
     }
     return render(request, 'customer/product_detail.html', context)
   
+def create_review(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        rating = request.POST.get('rating')
+
+        if content and rating:
+            review, created = Review.objects.get_or_create(
+                product=product,
+                customer=request.user,
+                defaults={'content': content, 'rating': rating}
+            )
+            if not created:
+                review.content = content
+                review.rating = rating
+                review.save()
+
+        return redirect('customer:product_detail', product_id=product.product_id)
+
+    product_imgs = ProductImage.objects.filter(product=product)
+    reviews = Review.objects.filter(product=product)
+    context = {
+        'product': product,
+        'product_imgs': product_imgs,
+        'reviews': reviews,
+    }
+    return render(request, 'customer/product_detail.html', context)
+
+
 # 장바구니 삭제 버튼
 def delete_cart_item(request, user_id):
     if request.method == 'POST':
@@ -323,7 +462,6 @@ def update_quantity(request, user_id):
 #     })
 
 ########################################## 세션 장바구니
-from collections import defaultdict
 
 def guest_cart(request):
    # 쿠키에서 장바구니 데이터 가져오기
@@ -414,7 +552,7 @@ def delete_guest_cart_item(request):
             
             else: # 삭제 후 남은 물건이 없는 경우
                 response = JsonResponse({'success': True, 'total_price': 0, 'discount_price': 0, 'final_price': 0})
-                response.delete_cookie(product_id)
+                response.delete_cookie(str(delete_product_id))
                 return response
         
         except Exception as e:
@@ -458,7 +596,7 @@ def update_guest_cart_quantity(request):
         'total_price': sum(item['total_price'] for item in cart_item_list),
         'discount_price': int(sum(item['product'].discount_rate * item['total_price'] for item in cart_item_list)),
         'final_price': sum(item['total_price'] * (1 - item['product'].discount_rate) for item in cart_item_list),
-        'one_price' : [{'product_id': item['product_id'], 'price': item['product'].price} for item in cart_item_list]
+        'one_price' : [item['final_price'] for item in cart_item_list if item['product_id'] == int(update_product_id)]
         })
     for item in cart_item_list:
         response.set_cookie(str(item['product_id']), str(item['quantity']))
@@ -660,6 +798,7 @@ def save_order(request):
         postal_code = request.POST.get('postal_code')
         recipient = request.POST.get('recipient')
         recipient_phone_number = request.POST.get('recipient_phone_number')
+        shipping_address_name = recipient + ' (집)' # 기본 이름
         # 결제 정보 불러오기
         payment_method = request.POST.get('payment_method')
         # 현재 날짜 가져오기
@@ -679,18 +818,24 @@ def save_order(request):
         OrderItem.objects.create(
                     order = order,
                     product=product,
-                    quantity=quantity
+                    quantity=quantity,
+                    # 아래 값은 모델에서 자동으로 생성, 저장
+                    # product_name=product.product_name,
+                    # product_price= product.price * (1 - float(product.discount_rate))
                 )
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
                     customer = user,
-                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    shipping_address = shipping_address,
+                    shipping_address_detail = shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
-                    recipient_phone_number = recipient_phone_number
+                    recipient_phone_number = recipient_phone_number,
+                    shipping_address_name = shipping_address_name
                 )
         
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
+    return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
 
 @login_required
 @transaction.atomic
@@ -784,10 +929,17 @@ def save_order_from_cart(request):
     if request.method == 'POST': # 주문하기 버튼이 눌린 경우
         # 구매자 정보 불러오기
         user = request.user
+        
         # 카트 불러오기
-        cart = Cart.objects.get(customer=user)
+        try:
+            cart = Cart.objects.get(customer=user)
+        except Cart.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '카트를 찾을 수 없습니다.'})
+        
         # 카트 아이템 불러오기
         cart_items = CartItem.objects.filter(cart=cart)
+        if not cart_items.exists():
+            return JsonResponse({'success': False, 'message': '카트에 상품이 없습니다.'})
         
         # 데이터베이스에서 가져온 제품 정보를 모아둘 리스트 생성
         product_list = []
@@ -807,6 +959,7 @@ def save_order_from_cart(request):
         postal_code = request.POST.get('postal_code')
         recipient = request.POST.get('recipient')
         recipient_phone_number = request.POST.get('recipient_phone_number')
+        shipping_address_name = recipient + ' (집)' # 기본 이름
         # 결제 정보 불러오기
         payment_method = request.POST.get('payment_method')
         # 현재 날짜 가져오기
@@ -828,18 +981,24 @@ def save_order_from_cart(request):
             OrderItem.objects.create(
                     order = order,
                     product=product,
-                    quantity=quantity
+                    quantity=quantity,
+                    # 아래 값은 모델에서 자동으로 생성, 저장
+                    # product_name=product.product_name,
+                    # product_price= product.price * (1 - float(product.discount_rate))
                 )  
         # 입력한 주소 배송지 목록에 저장하기
         shipping_address = ShippingAddress.objects.create(
                     customer = user,
-                    shipping_address = shipping_address + ' ' + shipping_address_detail,
+                    shipping_address = shipping_address,
+                    shipping_address_detail = shipping_address_detail,
                     postal_code = postal_code,
                     recipient = recipient,
-                    recipient_phone_number = recipient_phone_number
+                    recipient_phone_number = recipient_phone_number,
+                    shipping_address_name = shipping_address_name
                 )
             
         return JsonResponse({'success': True, 'message': '결제가 완료되어야 구매가 완료됩니다.', 'order_id': order.order_id}) # 메세지는 사용 안됨
+    return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'})
 
 @login_required
 @transaction.atomic
@@ -897,13 +1056,18 @@ def save_payment_from_cart(request):
             
         return JsonResponse({'success': True, 'message': 'Payment created successfully', 'order_id': order.order_id}) # 메시지는 안쓰임
 
+# 결제가 된 주문 가져오기
+@login_required
 def order_success(request):
-    # 결제가 된 주문 가져오기
-
-    # 수정할 사항 : user 정보 넣어야함. 내것만 확인가능하도록
-
+    # 로그인한 사용자 정보 가져오기
+    user = request.user
+    # order_id 가져오기
     order_id = request.GET.get('order_id')
-    order = Order.objects.get(order_id=order_id)   
+    # order 가져오기 및 사용자 검증
+    order = get_object_or_404(Order, order_id=order_id)
+    if order.customer != user:
+        return HttpResponseForbidden("접근권한이 없는 페이지입니다.")
+
     order_items = OrderItem.objects.filter(order = order)
     payment = Payment.objects.get(order=order)
         
@@ -938,10 +1102,12 @@ def my_shopping_list(request):
         # 구매자 정보 불러오기
         user = request.user
         # 구매자의 모든 주문 가져오기
-        orders = Order.objects.filter(customer=request.user) \
-        .prefetch_related('orderitem_set__product', 'payment_set')
+        orders = Order.objects.filter(customer=user) \
+        .prefetch_related('orderitem_set__product', 'payment_set') \
+        .order_by('-order_id')
+
         context={
-            'orders' : orders,
+            'orders' : orders
             }
         return render(request,"customer/my_shopping.html", context)
     
@@ -964,16 +1130,18 @@ def get_access_token():
 # 주문 취소 (결제된 상품이면 환불 포함)
 @login_required
 @transaction.atomic
-def cancel_order(request, order_id):
+def cancel_order(request, orderitem_id):
+    order_item = get_object_or_404(OrderItem, pk=orderitem_id, order__customer=request.user, is_refunded=False)
+    
     # 결제완료(카드)일 경우만 주문 취소 기능 활성화 + 결제대기(통장)의 경우 추가 가능
-    order = get_object_or_404(Order, pk=order_id, customer=request.user)
+    order = order_item.order
     if order.order_status not in ['결제완료', '부분환불']:
         return JsonResponse({'code': 1, 'message': '주문 취소가 불가능한 상태입니다.'})
     
     # 취소/환불할 상품의 결제 정보가져오기 (결제가 완료된 상태에 한해 진행 중)
     payment = Payment.objects.get(order=order)
     imp_uid = payment.imp_uid
-    item_types_count = order.orderitem_set.count() # 테스트용 결제 금액 계산용
+    # item_types_count = order.orderitem_set.count() # 테스트용 결제 금액 계산용
 
     # api 통신 토큰 생성 (30분 유효)
     token = get_access_token()
@@ -984,7 +1152,7 @@ def cancel_order(request, order_id):
     }
     payload = {
         'imp_uid': imp_uid,  # 포트원 주문번호
-        'amount' : 100*item_types_count, # 취소한 상품의 결제 금액만큼 취소 (부분취소는 orderitem 구조에 결제상태&환불금액 정보 기입후 사용)
+        'amount' : 100, # 한 주문건(오더아이템)당 100원으로 테스트
         'reason': '고객 요청', 
     }
     
@@ -999,18 +1167,18 @@ def cancel_order(request, order_id):
         # API에서 오류가 발생한 경우
         return JsonResponse({'code': 3, 'message': f'결제 취소 중 오류가 발생했습니다: {result.get("message")}'})
 
-    # 모델 수정 후 부분 취소 가능
-    # # 결제 금액과 취소 금액 비교하여 주문 상태 업데이트
-    # cancel_amount = result.get('response', {}).get('cancel_amount', 0)
-    # if cancel_amount >= payment.paid_amount:
-    #     order.order_status = '환불완료'
-    # else:
-    #     order.order_status = '부분환불'
-    # order.save()
-
-    # 전체 환불처리
-    order.order_status = '환불완료'
+    # 주문아이템 상태 업데이트 (환불처리)
+    order_item.is_refunded = True
+    order_item.save()
+        
+    # 주문 상태 업데이트
+    all_items = order.orderitem_set.all()
+    if all(item.is_refunded for item in all_items):
+            order.order_status = "환불완료"
+    elif any(item.is_refunded for item in all_items):
+            order.order_status = "부분환불"
     order.save()
 
-    return JsonResponse(response.json())
+    return JsonResponse({"code": 0, "message": "주문 아이템이 성공적으로 취소되었습니다.", "order_status": order.order_status, "item_status": order_item.is_refunded})
+    
 

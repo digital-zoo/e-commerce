@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth import get_user_model
 from myuser.models import MyUser
 from django.contrib.auth.models import Group, Permission
+from decimal import Decimal
 
 # 멤버쉽 테이블\\
 class Membership(models.Model):
@@ -67,8 +68,9 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey('seller.Product', on_delete=models.SET_NULL, null=True)  # 상품 삭제 시 null로 설정
     product_name = models.CharField(max_length=100)  # 주문 당시의 상품 이름을 저장
-    product_price = models.DecimalField(max_digits=10, decimal_places=2)  # 주문 당시의 상품 가격을 저장
-    quantity = models.IntegerField() 
+    product_price = models.DecimalField(max_digits=10, decimal_places=2)  # 주문 당시의 상품 가격을 저장(할인가 등)
+    quantity = models.IntegerField()
+    is_refunded = models.BooleanField(default=False)  # 환불 여부
 
     def __str__(self):
         return str(self.orderitem_id)
@@ -76,7 +78,7 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         if self.product:
             self.product_name = self.product.product_name
-            self.product_price = self.product.price
+            self.product_price = Decimal(self.product.price * (1 - self.product.discount_rate))
         super(OrderItem, self).save(*args, **kwargs)
     
 class Payment(models.Model):
@@ -102,19 +104,15 @@ class ShippingAddress(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     shipping_address_name = models.CharField(max_length=20)
     shipping_address = models.CharField(max_length=300)
+    shipping_address_detail = models.CharField(max_length=300)
     postal_code = models.CharField(max_length=5)
     recipient = models.CharField(max_length=100)
     recipient_phone_number = models.CharField(max_length=20)
 
 class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)  # 고객 삭제 시 null로 설정
-    customer_id_copy = models.IntegerField()  # 고객 ID를 직접 저장
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey('seller.Product', on_delete=models.CASCADE)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if self.customer:
-            self.customer_id_copy = self.customer.id  # 고객 ID 저장
-        super(Review, self).save(*args, **kwargs)
+    rating = models.IntegerField(default=5)
+    created_at = models.DateTimeField(auto_now_add=True) 
