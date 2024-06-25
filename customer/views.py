@@ -1113,16 +1113,16 @@ def my_shopping_list(request):
     
 # 결제 관련 rest api 인증 정보 
 load_dotenv() 
-rest_api_imp=os.getenv("PAYMENT_REST_API_IMP")
-rest_api_key=os.getenv("PAYMENT_REST_API_KEY")
-rest_api_secret=os.getenv("PAYMENT_REST_API_SECRET")
+PAYMENT_REST_API_IMP=os.getenv("PAYMENT_REST_API_IMP")
+PAYMENT_REST_API_KEY=os.getenv("PAYMENT_REST_API_KEY")
+PAYMENT_REST_API_SECRET=os.getenv("PAYMENT_REST_API_SECRET")
 
 # 액세스 토큰 발급 함수
 def get_access_token():
     url = "https://api.iamport.kr/users/getToken"
     payload = {
-        'imp_key': rest_api_key,
-        'imp_secret': rest_api_secret
+        'imp_key': PAYMENT_REST_API_IMP,
+        'imp_secret': PAYMENT_REST_API_KEY
     }
     response = requests.post(url, data=payload)
     return response.json().get('response').get('access_token')
