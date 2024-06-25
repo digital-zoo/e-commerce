@@ -25,6 +25,9 @@ services:
     environment:
       - MY_DB_PASSWORD=${MY_DB_PASSWORD}
       - DEBUG=${DEBUG}
+      - PAYMENT_REST_API_IMP=${PAYMENT_REST_API_IMP}
+      - PAYMENT_REST_API_KEY=${PAYMENT_REST_API_KEY}
+      - PAYMENT_REST_API_SECRET=${PAYMENT_REST_API_SECRET}  
     depends_on:
       - db
 
